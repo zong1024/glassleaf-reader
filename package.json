@@ -1,0 +1,18 @@
+{
+  "name": "glassleaf-reader",
+  "private": true,
+  "version": "0.1.0",
+  "packageManager": "pnpm@10.29.3",
+  "scripts": {
+    "dev": "concurrently -n web,api -c cyan,green \"pnpm --filter @glassleaf/web dev\" \"pnpm --filter @glassleaf/api dev\"",
+    "dev:web": "pnpm --filter @glassleaf/web dev",
+    "dev:api": "pnpm --filter @glassleaf/api dev",
+    "build": "pnpm -r build",
+    "db:generate": "pnpm --filter @glassleaf/api db:generate",
+    "db:push": "pnpm --filter @glassleaf/api db:push",
+    "db:seed": "pnpm --filter @glassleaf/api db:seed"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
+}

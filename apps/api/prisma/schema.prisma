@@ -1,0 +1,144 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum BookFormat {
+  EPUB
+  PDF
+  TXT
+  MD
+}
+
+model User {
+  id           String            @id @default(cuid())
+  email        String            @unique
+  passwordHash String
+  displayName  String?
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+  refreshTokens RefreshToken[]
+  books        Book[]
+  bookmarks    Bookmark[]
+  annotations  Annotation[]
+  progresses   ReadingProgress[]
+}
+
+model RefreshToken {
+  id         String   @id @default(cuid())
+  userId     String
+  tokenHash  String   @unique
+  userAgent  String?
+  ipAddress  String?
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  revokedAt  DateTime?
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, expiresAt])
+}
+
+model Book {
+  id               String            @id @default(cuid())
+  ownerId          String
+  title            String
+  subtitle         String?
+  description      String?
+  authorsJson      String
+  format           BookFormat
+  language         String?
+  publisher        String?
+  publishedAt      String?
+  identifier       String?
+  isbn             String?
+  subject          String?
+  series           String?
+  fileName         String
+  originalFileName String
+  mimeType         String
+  extension        String
+  fileSize         Int
+  checksum         String
+  storagePath      String
+  pageCount        Int?
+  wordCount        Int?
+  chapterCount     Int?
+  metadataSource   String
+  metadataJson     String?
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  owner            User              @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  bookmarks        Bookmark[]
+  annotations      Annotation[]
+  progresses       ReadingProgress[]
+
+  @@unique([ownerId, checksum])
+  @@index([ownerId, updatedAt])
+}
+
+model Bookmark {
+  id         String   @id @default(cuid())
+  userId     String
+  bookId     String
+  label      String?
+  note       String?
+  locator    String
+  locatorType String
+  progression Float?
+  page       Int?
+  chapter    String?
+  snippet    String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  book       Book     @relation(fields: [bookId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, bookId, locator])
+  @@index([userId, bookId, createdAt])
+}
+
+model Annotation {
+  id          String   @id @default(cuid())
+  userId      String
+  bookId      String
+  quote       String?
+  note        String?
+  color       String?
+  locator     String
+  locatorType String
+  progression Float?
+  page        Int?
+  chapter     String?
+  snippet     String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  book        Book     @relation(fields: [bookId], references: [id], onDelete: Cascade)
+
+  @@index([userId, bookId, createdAt])
+}
+
+model ReadingProgress {
+  id          String   @id @default(cuid())
+  userId      String
+  bookId      String
+  locator     String
+  locatorType String
+  progression Float?
+  page        Int?
+  chapter     String?
+  snippet     String?
+  completedAt DateTime?
+  lastOpenedAt DateTime @default(now())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  book        Book     @relation(fields: [bookId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, bookId])
+  @@index([userId, lastOpenedAt])
+}

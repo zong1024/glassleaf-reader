@@ -1,0 +1,38 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "outDir": "dist",
+    "rootDir": "src",
+    "strict": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "types": ["node"]
+  },
+  "include": [
+    "src/app.ts",
+    "src/env.ts",
+    "src/server.ts",
+    "src/seed.ts",
+    "src/lib/mappers.ts",
+    "src/lib/metadata.ts",
+    "src/lib/prisma.ts",
+    "src/lib/security.ts",
+    "src/lib/storage.ts",
+    "src/routes/auth.ts",
+    "src/routes/books.ts",
+    "src/routes/reader.ts"
+  ],
+  "exclude": [
+    "dist",
+    "node_modules",
+    "src/index.ts",
+    "src/lib/env.ts",
+    "src/lib/paths.ts",
+    "src/middleware/**/*",
+    "src/seed/**/*",
+    "src/services/**/*",
+    "src/types/**/*"
+  ]
+}
