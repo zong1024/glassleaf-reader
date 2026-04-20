@@ -65,8 +65,67 @@ pnpm dev
 pnpm build
 ```
 
+## Run the API in Production Mode
+
+```bash
+pnpm --filter @glassleaf/api build
+pnpm --filter @glassleaf/api db:push
+cd apps/api
+NODE_ENV=production node dist/server.js
+```
+
+`DATABASE_URL` is currently configured for SQLite by default (`file:./dev.db`), which is convenient for local and small deployments.
+
+For cloud deployments, move to a dedicated PostgreSQL database later by migrating Prisma schema and deployment resources.
+
 ## Notes
 
 - The web app defaults to `http://localhost:4000` for the API.
 - The API exposes `/health` and versioned routes under `/v1`.
 - A local offline fallback layer exists in the web app so the interface can still be explored even if the API is unavailable.
+
+## Online Deployment
+
+### 1) Prepare a Remote API
+
+You can run the API on any Node 24+ host (DigitalOcean, Railway, Render, Azure, a VPS).
+
+- Copy `apps/api/.env.example` to `apps/api/.env` and update these values:
+  - `DATABASE_URL`
+  - `JWT_SECRET`
+  - `CORS_ORIGINS` (comma separated host list, or `*`)
+  - `STORAGE_ROOT` (on ephemeral storage choose a mounted persistent volume)
+
+Start with:
+
+```bash
+pnpm --filter @glassleaf/api db:push
+pnpm --filter @glassleaf/api start
+```
+
+Open the `GET /health` endpoint to confirm the service is reachable.
+
+### 2) Point the Frontend to Your API
+
+Set `VITE_API_ORIGIN` to your deployed API origin (no trailing slash), for example:
+
+```
+VITE_API_ORIGIN=https://api.example.com
+```
+
+For static hosting with GitHub Pages, use repository variables/secrets in CI:
+
+1. Add `VITE_API_ORIGIN` to repository variables.
+2. Re-run deployment so `apps/web` gets the production build-time value.
+3. Set `CORS_ORIGINS` on the API host to include your pages domain.
+
+### 3) Online Performance Checklist
+
+- Keep uploads below API instance limits.
+- Enable gzip/ Brotli and static response caching at your host/proxy layer.
+- Keep `readerState` calls as a single source of truth for:
+  - book data
+  - progress
+  - bookmarks
+  - annotations
+- Use one storage volume for book files and prune stale files by scheduled job if needed.

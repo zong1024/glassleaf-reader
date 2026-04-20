@@ -35,7 +35,7 @@ export async function buildApp(): Promise<FastifyInstance> {
   });
 
   await app.register(cors, {
-    origin: true,
+    origin: buildCorsOriginMatcher(),
     credentials: true,
   });
 
@@ -98,6 +98,23 @@ export async function buildApp(): Promise<FastifyInstance> {
   });
 
   return app;
+}
+
+function buildCorsOriginMatcher() {
+  if (env.CORS_ORIGINS.trim() === "*") {
+    return true;
+  }
+
+  const allowedOrigins = env.CORS_ORIGINS.split(",").map((value) => value.trim());
+
+  return (origin: string | undefined, callback: (err: null, allow: boolean) => void) => {
+    if (!origin) {
+      callback(null, true);
+      return;
+    }
+
+    callback(null, allowedOrigins.includes(origin));
+  };
 }
 
 function requestAwareLog(app: FastifyInstance, error: Error): void {

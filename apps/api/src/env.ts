@@ -17,6 +17,7 @@ const envSchema = z.object({
   REFRESH_TOKEN_TTL_DAYS: z.coerce.number().int().positive().default(30),
   MAX_UPLOAD_SIZE_MB: z.coerce.number().positive().default(200),
   STORAGE_ROOT: z.string().trim().min(1).default("./storage"),
+  CORS_ORIGINS: z.string().trim().min(1).default("*"),
 });
 
 const parsed = envSchema.parse(process.env);

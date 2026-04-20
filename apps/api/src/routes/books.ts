@@ -80,6 +80,7 @@ export const booksRoutes: FastifyPluginAsync = async (app) => {
           format,
           absolutePath: stored.absolutePath,
           originalFileName: stored.originalFileName,
+          checksum: stored.checksum,
         });
         const overrideMetadata = parseMultipartMetadata(upload.fields);
         const metadata = finalizeMetadata(parsedMetadata, overrideMetadata, stored.originalFileName);

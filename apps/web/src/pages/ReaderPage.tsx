@@ -14,27 +14,9 @@ export function ReaderPage() {
   const queryClient = useQueryClient();
   const [fileUrl, setFileUrl] = useState("");
 
-  const detailQuery = useQuery({
-    queryKey: ["book", bookId],
+  const stateQuery = useQuery({
+    queryKey: ["bookState", bookId],
     queryFn: () => api.books.detail(bookId, token),
-    enabled: Boolean(bookId),
-  });
-
-  const bookmarksQuery = useQuery({
-    queryKey: ["bookmarks", bookId],
-    queryFn: () => api.books.bookmarks(bookId, token),
-    enabled: Boolean(bookId),
-  });
-
-  const annotationsQuery = useQuery({
-    queryKey: ["annotations", bookId],
-    queryFn: () => api.books.annotations(bookId, token),
-    enabled: Boolean(bookId),
-  });
-
-  const progressQuery = useQuery({
-    queryKey: ["progress", bookId],
-    queryFn: () => api.books.progress(bookId, token),
     enabled: Boolean(bookId),
   });
 
@@ -71,12 +53,12 @@ export function ReaderPage() {
       progress?: number;
       page?: number | null;
     }) => api.books.createBookmark(bookId, token, payload),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["bookmarks", bookId] }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["bookState", bookId] }),
   });
 
   const removeBookmark = useMutation({
     mutationFn: (bookmarkId: string) => api.books.deleteBookmark(bookId, bookmarkId, token),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["bookmarks", bookId] }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["bookState", bookId] }),
   });
 
   const addAnnotation = useMutation({
@@ -88,12 +70,12 @@ export function ReaderPage() {
       color?: string;
       tone?: "HIGHLIGHT" | "NOTE";
     }) => api.books.createAnnotation(bookId, token, payload),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["annotations", bookId] }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["bookState", bookId] }),
   });
 
   const removeAnnotation = useMutation({
     mutationFn: (annotationId: string) => api.books.deleteAnnotation(bookId, annotationId, token),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["annotations", bookId] }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["bookState", bookId] }),
   });
 
   const saveProgress = useMutation({
@@ -106,12 +88,15 @@ export function ReaderPage() {
       readingState?: "QUEUED" | "READING" | "FINISHED";
     }) => api.books.saveProgress(bookId, token, { ...payload, device: "web" }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["book", bookId] });
+      queryClient.invalidateQueries({ queryKey: ["bookState", bookId] });
       queryClient.invalidateQueries({ queryKey: ["dashboard"] });
     },
   });
 
-  const book = detailQuery.data?.book;
+  const book = stateQuery.data?.book;
+  const annotations = stateQuery.data?.annotations ?? [];
+  const bookmarks = stateQuery.data?.bookmarks ?? [];
+  const progress = stateQuery.data?.progress;
 
   if (!book || !fileUrl) {
     return (
@@ -124,11 +109,11 @@ export function ReaderPage() {
 
   return (
     <ReaderWorkspace
-      annotations={annotationsQuery.data?.annotations ?? []}
-      bookmarks={bookmarksQuery.data?.bookmarks ?? []}
+      annotations={annotations}
+      bookmarks={bookmarks}
       book={book}
       fileUrl={fileUrl}
-      initialLocation={progressQuery.data?.progress?.location ?? book.progress?.location}
+      initialLocation={progress?.location ?? book.progress?.location}
       onAddAnnotation={(payload) => addAnnotation.mutate(payload)}
       onAddBookmark={(payload) => addBookmark.mutate(payload)}
       onBack={() => navigate("/library")}

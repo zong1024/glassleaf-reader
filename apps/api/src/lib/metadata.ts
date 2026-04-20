@@ -31,35 +31,75 @@ const xmlParser = new XMLParser({
   parseTagValue: false,
   trimValues: true,
 });
+const metadataCache = new Map<string, ParsedBookMetadata>();
+const METADATA_CACHE_CAPACITY = 128;
 
 export async function extractBookMetadata(input: {
   format: BookFormat;
   absolutePath: string;
   originalFileName: string;
+  checksum?: string;
 }): Promise<ParsedBookMetadata> {
+  const cacheKey = input.checksum ? `${input.format}:${input.checksum}` : undefined;
+  if (cacheKey) {
+    const cached = metadataCache.get(cacheKey);
+    if (cached) {
+      return { ...cached };
+    }
+  }
+
   const fallbackTitle = inferTitleFromFileName(input.originalFileName);
 
   try {
+    let parsed: ParsedBookMetadata;
     switch (input.format) {
       case BookFormat.EPUB:
-        return await parseEpubMetadata(input.absolutePath, fallbackTitle);
+        parsed = await parseEpubMetadata(input.absolutePath, fallbackTitle);
+        break;
       case BookFormat.PDF:
-        return await parsePdfMetadata(input.absolutePath, fallbackTitle);
+        parsed = await parsePdfMetadata(input.absolutePath, fallbackTitle);
+        break;
       case BookFormat.MD:
-        return await parseMarkdownMetadata(input.absolutePath, fallbackTitle);
+        parsed = await parseMarkdownMetadata(input.absolutePath, fallbackTitle);
+        break;
       case BookFormat.TXT:
-        return await parseTextMetadata(input.absolutePath, fallbackTitle);
+        parsed = await parseTextMetadata(input.absolutePath, fallbackTitle);
+        break;
       default:
-        return fallbackMetadata(fallbackTitle);
+        parsed = fallbackMetadata(fallbackTitle);
+        break;
     }
+
+    if (cacheKey) {
+      storeMetadataCache(cacheKey, parsed);
+    }
+
+    return parsed;
   } catch (error) {
-    return {
+    const parsed = {
       ...fallbackMetadata(fallbackTitle),
       metadataJson: {
         error: error instanceof Error ? error.message : "Unknown metadata error",
       },
     };
+
+    if (cacheKey) {
+      storeMetadataCache(cacheKey, parsed);
+    }
+
+    return parsed;
   }
+}
+
+function storeMetadataCache(cacheKey: string, payload: ParsedBookMetadata) {
+  if (metadataCache.size >= METADATA_CACHE_CAPACITY) {
+    const oldestKey = metadataCache.keys().next().value;
+    if (oldestKey) {
+      metadataCache.delete(oldestKey);
+    }
+  }
+
+  metadataCache.set(cacheKey, { ...payload });
 }
 
 export function detectBookFormat(extension: string, mimeType: string): BookFormat | null {

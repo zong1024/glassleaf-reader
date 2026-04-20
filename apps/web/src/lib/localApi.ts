@@ -787,7 +787,17 @@ export const localApi = {
         throw new Error("Book not found");
       }
 
-      return { book };
+      const progressMap = getProgressForUser(user.id);
+      const bookmarks = getBookmarksForUser(user.id);
+      const annotations = getAnnotationsForUser(user.id);
+      const progress = progressMap[bookId] ?? null;
+
+      return {
+        book,
+        progress,
+        bookmarks: bookmarks[bookId] ?? [],
+        annotations: annotations[bookId] ?? [],
+      };
     },
 
     async upload(file: File, token: string, onProgress?: (value: number) => void) {

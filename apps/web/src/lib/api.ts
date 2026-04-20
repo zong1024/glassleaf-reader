@@ -103,6 +103,19 @@ type RawProgress = RawLocator & {
   lastOpenedAt: string;
 };
 
+type RawBookReaderState = {
+  book: RawBook;
+  progress: RawProgress | null;
+  bookmarks: Array<RawLocator & { label: string | null; note: string | null }>;
+  annotations: Array<
+    RawLocator & {
+      quote: string | null;
+      note: string | null;
+      color: string | null;
+    }
+  >;
+};
+
 let refreshPromise: Promise<string | null> | null = null;
 
 function mapUser(raw: RawUser): User {
@@ -432,12 +445,7 @@ export const api = {
         return await localApi.books.detail(bookId, token);
       }
 
-      const response = await request<{
-        book: RawBook;
-        progress: RawProgress | null;
-        bookmarks: Array<RawLocator & { label: string | null; note: string | null }>;
-        annotations: Array<RawLocator & { quote: string | null; note: string | null; color: string | null }>;
-      }>(`/books/${bookId}/state`, { token });
+      const response = await request<RawBookReaderState>(`/books/${bookId}/state`, { token });
 
       return {
         book: mapBook(response.book, {
@@ -445,6 +453,9 @@ export const api = {
           bookmarkCount: response.bookmarks.length,
           annotationCount: response.annotations.length,
         }),
+        bookmarks: response.bookmarks.map(mapBookmark),
+        annotations: response.annotations.map(mapAnnotation),
+        progress: mapProgress(response.progress),
       };
     },
     async upload(file: File, token: string, onProgress?: (value: number) => void) {
