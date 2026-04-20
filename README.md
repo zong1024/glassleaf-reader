@@ -45,6 +45,8 @@ pnpm db:generate
 pnpm db:push
 ```
 
+`pnpm db:push` now bootstraps the local SQLite file automatically on first run.
+
 5. Seed a demo user if you want one:
 
 ```bash
@@ -68,4 +70,3 @@ pnpm build
 - The web app defaults to `http://localhost:4000` for the API.
 - The API exposes `/health` and versioned routes under `/v1`.
 - A local offline fallback layer exists in the web app so the interface can still be explored even if the API is unavailable.
-- In this environment, `pnpm db:push` currently returns a Prisma schema engine error, so database table creation may need one more local pass on your machine.

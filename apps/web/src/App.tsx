@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { BrowserRouter } from "react-router-dom";
+import { BrowserRouter, HashRouter } from "react-router-dom";
 
 import { AppShell } from "./components/AppShell";
 import { api } from "./lib/api";
@@ -18,6 +18,7 @@ import { AuthPage } from "./pages/AuthPage";
 function App() {
   const queryClient = useQueryClient();
   const [token, setToken] = useState(() => getStoredToken());
+  const Router = import.meta.env.BASE_URL === "/" ? BrowserRouter : HashRouter;
 
   const meQuery = useQuery({
     queryKey: ["me", token],
@@ -88,9 +89,9 @@ function App() {
 
   return (
     <SessionContext.Provider value={sessionValue}>
-      <BrowserRouter>
+      <Router>
         <AppShell />
-      </BrowserRouter>
+      </Router>
     </SessionContext.Provider>
   );
 }

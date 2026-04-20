@@ -8,7 +8,7 @@
     "start": "node dist/server.js",
     "build": "pnpm --filter @glassleaf/contracts build && prisma generate && tsc -p tsconfig.json",
     "db:generate": "prisma generate",
-    "db:push": "prisma db push",
+    "db:push": "node scripts/prisma-db-push.mjs",
     "db:seed": "tsx src/seed.ts"
   },
   "dependencies": {
