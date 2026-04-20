@@ -117,7 +117,7 @@ export function ReaderPage() {
     return (
       <div className="reader-loading-shell glass-panel">
         <LoaderCircle className="is-spinning" size={20} />
-        <p>Loading your book and restoring reading position…</p>
+        <p>Loading your book and restoring reading position...</p>
       </div>
     );
   }

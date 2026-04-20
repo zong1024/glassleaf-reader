@@ -1,11 +1,4 @@
-import type {
-  Annotation,
-  Book,
-  Bookmark,
-  DashboardPayload,
-  ReadingProgress,
-  User,
-} from "./types";
+import type { Annotation, Book, Bookmark, DashboardPayload, ReadingProgress, User } from "./types";
 import { localApi } from "./localApi";
 import {
   clearStoredTokens,
@@ -14,8 +7,33 @@ import {
   setStoredToken,
 } from "./storage";
 
-const API_ORIGIN = import.meta.env.VITE_API_ORIGIN || "http://localhost:4000";
-const API_BASE = `${API_ORIGIN}/v1`;
+function resolveApiOrigin() {
+  const configuredOrigin = import.meta.env.VITE_API_ORIGIN?.trim();
+
+  if (configuredOrigin) {
+    return configuredOrigin.replace(/\/$/u, "");
+  }
+
+  if (typeof window === "undefined") {
+    return "http://localhost:4000";
+  }
+
+  const { hostname, origin } = window.location;
+
+  if (hostname === "localhost" || hostname === "127.0.0.1") {
+    return "http://localhost:4000";
+  }
+
+  if (hostname.endsWith("github.io")) {
+    return "";
+  }
+
+  return origin.replace(/\/$/u, "");
+}
+
+const API_ORIGIN = resolveApiOrigin();
+const API_BASE = API_ORIGIN ? `${API_ORIGIN}/v1` : "";
+const REMOTE_API_ENABLED = Boolean(API_BASE);
 
 type RequestOptions = {
   method?: string;
@@ -244,6 +262,10 @@ async function refreshAccessToken() {
 }
 
 async function request<T>(endpoint: string, options: RequestOptions = {}, allowRefresh = true) {
+  if (!REMOTE_API_ENABLED) {
+    throw new Error("Remote API unavailable");
+  }
+
   const headers = new Headers(options.headers);
   const isPlainBody =
     options.body &&
@@ -300,6 +322,10 @@ export function absoluteAssetUrl(path?: string | null) {
     path.startsWith("data:") ||
     path.startsWith("blob:")
   ) {
+    return path;
+  }
+
+  if (!API_ORIGIN) {
     return path;
   }
 
