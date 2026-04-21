@@ -95,6 +95,7 @@ export const bookSchema = z.object({
   title: z.string(),
   subtitle: z.string().nullable(),
   description: z.string().nullable(),
+  coverUrl: z.string().nullable().optional(),
   authors: z.array(z.string()),
   format: bookFormatSchema,
   language: z.string().nullable(),

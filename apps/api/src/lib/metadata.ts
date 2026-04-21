@@ -25,6 +25,12 @@ export type ParsedBookMetadata = {
   metadataJson?: Record<string, unknown>;
 };
 
+export type ExtractedEpubCover = {
+  buffer: Buffer;
+  mimeType: string;
+  fileName: string;
+};
+
 const xmlParser = new XMLParser({
   ignoreAttributes: false,
   attributeNamePrefix: "",
@@ -242,6 +248,8 @@ async function parseEpubMetadata(
     typeof coverItem?.href === "string"
       ? posix.normalize(posix.join(posix.dirname(opfPath), coverItem.href))
       : undefined;
+  const coverMediaType =
+    typeof coverItem?.["media-type"] === "string" ? String(coverItem["media-type"]) : undefined;
   const series =
     xmlText(metaEntries.find((entry) => entry.property === "belongs-to-collection")) ||
     xmlText(metaEntries.find((entry) => entry.name === "calibre:series"));
@@ -262,9 +270,88 @@ async function parseEpubMetadata(
     metadataJson: {
       opfPath,
       coverHref,
+      coverMediaType,
       identifiers,
       manifestCount: manifestItems.length,
     },
+  };
+}
+
+export async function extractEpubCover(absolutePath: string): Promise<ExtractedEpubCover | null> {
+  const directory = await unzipper.Open.file(absolutePath);
+  const containerEntry = directory.files.find(
+    (entry) => entry.path.toLowerCase() === "meta-inf/container.xml",
+  );
+
+  if (!containerEntry) {
+    return null;
+  }
+
+  const containerXml = (await containerEntry.buffer()).toString("utf8");
+  const containerDoc = xmlParser.parse(containerXml);
+  const rootfilesNode = findXmlChild(findXmlChild(containerDoc, "container"), "rootfiles");
+  const rootfileNode = asArray(findXmlChild(rootfilesNode, "rootfile"))[0] as
+    | Record<string, unknown>
+    | undefined;
+  const opfPath = typeof rootfileNode?.["full-path"] === "string" ? rootfileNode["full-path"] : "";
+
+  if (!opfPath) {
+    return null;
+  }
+
+  const opfEntry = directory.files.find(
+    (entry) => entry.path.toLowerCase() === opfPath.toLowerCase(),
+  );
+
+  if (!opfEntry) {
+    return null;
+  }
+
+  const opfXml = (await opfEntry.buffer()).toString("utf8");
+  const packageDoc = xmlParser.parse(opfXml);
+  const packageNode = findXmlChild(packageDoc, "package") as Record<string, unknown> | undefined;
+  const metadataNode = findXmlChild(packageNode, "metadata");
+  const manifestNode = findXmlChild(packageNode, "manifest");
+  const metaEntries = asArray(findXmlChild(metadataNode, "meta")).filter(
+    (value): value is Record<string, unknown> =>
+      typeof value === "object" && value !== null && !Array.isArray(value),
+  );
+  const manifestItems = asArray(findXmlChild(manifestNode, "item")).filter(
+    (value): value is Record<string, unknown> =>
+      typeof value === "object" && value !== null && !Array.isArray(value),
+  );
+  const coverId = metaEntries.find((entry) => entry.name === "cover")?.content;
+  const coverItem =
+    manifestItems.find(
+      (entry) =>
+        typeof entry.properties === "string" &&
+        entry.properties.split(/\s+/).includes("cover-image"),
+    ) ||
+    manifestItems.find((entry) => entry.id === coverId);
+
+  const coverHref =
+    typeof coverItem?.href === "string"
+      ? posix.normalize(posix.join(posix.dirname(opfPath), coverItem.href))
+      : undefined;
+
+  if (!coverHref) {
+    return null;
+  }
+
+  const assetEntry = directory.files.find(
+    (entry) => entry.path.toLowerCase() === coverHref.toLowerCase(),
+  );
+
+  if (!assetEntry) {
+    return null;
+  }
+
+  return {
+    buffer: await assetEntry.buffer(),
+    mimeType:
+      (typeof coverItem?.["media-type"] === "string" && String(coverItem["media-type"])) ||
+      inferMimeTypeFromPath(coverHref),
+    fileName: basename(coverHref),
   };
 }
 
@@ -358,6 +445,21 @@ function inferTitleFromFileName(fileName: string): string {
   const withoutExtension = basename(fileName, extname(fileName));
   const normalized = withoutExtension.replace(/[_-]+/g, " ").trim();
   return normalized.length > 0 ? normalized : "Untitled Book";
+}
+
+function inferMimeTypeFromPath(filePath: string): string {
+  const extension = extname(filePath).toLowerCase();
+  if (extension === ".png") {
+    return "image/png";
+  }
+  if (extension === ".webp") {
+    return "image/webp";
+  }
+  if (extension === ".gif") {
+    return "image/gif";
+  }
+
+  return "image/jpeg";
 }
 
 function asArray<T>(value: T | T[] | undefined): T[] {

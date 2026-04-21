@@ -1,4 +1,4 @@
-import { forwardRef, useEffect, useImperativeHandle, useRef } from "react";
+import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
 
 import { useMediaQuery } from "../../hooks/useMediaQuery";
 import type { ReaderLocation, ReaderPreferences, ReaderSurfaceHandle } from "../../lib/types";
@@ -25,6 +25,7 @@ export default forwardRef<ReaderSurfaceHandle, EpubSurfaceProps>(function EpubSu
   const navigationRef = useRef<TocEntry[]>([]);
   const selectionRef = useRef<string | undefined>(undefined);
   const isCompact = useMediaQuery("(max-width: 960px)");
+  const [error, setError] = useState<string | null>(null);
 
   useImperativeHandle(ref, () => ({
     prev: () => {
@@ -59,64 +60,67 @@ export default forwardRef<ReaderSurfaceHandle, EpubSurfaceProps>(function EpubSu
       }
 
       container.innerHTML = "";
-      const module = await import("epubjs");
-      const createBook = (module as any).default ?? module;
-      const book = createBook(fileUrl);
-      const rendition = book.renderTo(container, {
-        width: "100%",
-        height: "100%",
-        flow: "paginated",
-        spread: isCompact ? "none" : "auto",
-        manager: "default",
-      });
-
-      bookRef.current = book;
-      renditionRef.current = rendition;
-      applyTheme(rendition, preferences);
-
-      const navigation = await book.loaded.navigation.catch(() => ({ toc: [] }));
-      navigationRef.current = flattenToc(navigation.toc ?? []);
-
-      rendition.on("selected", (_cfiRange: string, contents: any) => {
-        const quote = contents.window.getSelection()?.toString().trim();
-        selectionRef.current = quote || undefined;
-        contents.window.getSelection()?.removeAllRanges();
-      });
-
-      rendition.on("relocated", (location: any) => {
-        if (cancelled) {
-          return;
-        }
-
-        const href = location?.start?.href;
-        const cfi = location?.start?.cfi || href || initialLocation || "0";
-        const percentFromLocation = location?.start?.percentage;
-        const percentFromCfi = book.locations?.percentageFromCfi?.(cfi);
-        const percent =
-          typeof percentFromLocation === "number"
-            ? percentFromLocation
-            : typeof percentFromCfi === "number"
-              ? percentFromCfi
-              : 0;
-
-        onLocationChange({
-          location: cfi,
-          locatorType: "epub-cfi",
-          chapter: chapterLabelForLocation(href, navigationRef.current),
-          percent,
-          quote: selectionRef.current,
-        });
-      });
-
       try {
+        setError(null);
+        const createBook = await loadEpubFactory();
+        const book = createBook(fileUrl);
+        const rendition = book.renderTo(container, {
+          width: "100%",
+          height: "100%",
+          flow: "paginated",
+          spread: isCompact ? "none" : "auto",
+          manager: "default",
+        });
+
+        bookRef.current = book;
+        renditionRef.current = rendition;
+        applyTheme(rendition, preferences);
+
+        const navigation = await book.loaded.navigation.catch(() => ({ toc: [] }));
+        navigationRef.current = flattenToc(navigation.toc ?? []);
+
+        rendition.on("selected", (_cfiRange: string, contents: any) => {
+          const quote = contents.window.getSelection()?.toString().trim();
+          selectionRef.current = quote || undefined;
+          contents.window.getSelection()?.removeAllRanges();
+        });
+
+        rendition.on("relocated", (location: any) => {
+          if (cancelled) {
+            return;
+          }
+
+          const href = location?.start?.href;
+          const cfi = location?.start?.cfi || href || initialLocation || "0";
+          const percentFromLocation = location?.start?.percentage;
+          const percentFromCfi = book.locations?.percentageFromCfi?.(cfi);
+          const percent =
+            typeof percentFromLocation === "number"
+              ? percentFromLocation
+              : typeof percentFromCfi === "number"
+                ? percentFromCfi
+                : 0;
+
+          onLocationChange({
+            location: cfi,
+            locatorType: "epub-cfi",
+            chapter: chapterLabelForLocation(href, navigationRef.current),
+            percent,
+            quote: selectionRef.current,
+          });
+        });
+
         await book.ready;
         await rendition.display(resolveNavigationTarget(initialLocation, navigationRef.current) || undefined);
       } catch {
-        await rendition.display(undefined);
+        if (!cancelled) {
+          setError("This EPUB could not be opened. We have kept the file, but the reader engine could not parse it.");
+        }
+        return;
       }
 
       try {
-        await book.locations.generate(1200);
+        await bookRef.current?.locations.generate(1200);
       } catch {
         // Some light EPUBs do not expose enough data for generated locations.
       }
@@ -135,8 +139,37 @@ export default forwardRef<ReaderSurfaceHandle, EpubSurfaceProps>(function EpubSu
     };
   }, [fileUrl, initialLocation, isCompact, onLocationChange, preferences]);
 
+  if (error) {
+    return <div className="reader-loading glass-panel">{error}</div>;
+  }
+
   return <div className="reader-surface reader-surface--epub" ref={containerRef} />;
 });
+
+async function loadEpubFactory() {
+  const module = await import("epubjs");
+  const candidate =
+    (module as { default?: { default?: unknown } }).default?.default ??
+    (module as { default?: unknown }).default ??
+    (module as { ["module.exports"]?: unknown })["module.exports"] ??
+    module;
+
+  if (typeof candidate !== "function") {
+    throw new Error("EPUB renderer failed to initialize.");
+  }
+
+  return candidate as (input: string) => {
+    renderTo: (element: HTMLElement, options: Record<string, unknown>) => any;
+    loaded: { navigation: Promise<{ toc?: Array<{ label?: string; href?: string; subitems?: Array<any> }> }> };
+    ready: Promise<unknown>;
+    locations: {
+      generate: (chars: number) => Promise<void>;
+      cfiFromPercentage?: (value: number) => string | undefined;
+      percentageFromCfi?: (value: string) => number | undefined;
+    };
+    destroy?: () => void;
+  };
+}
 
 function applyTheme(rendition: any, preferences: ReaderPreferences) {
   const palette =

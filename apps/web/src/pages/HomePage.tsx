@@ -4,7 +4,8 @@ import { useNavigate } from "react-router-dom";
 
 import { BookCard } from "../components/BookCard";
 import { SectionTitle } from "../components/SectionTitle";
-import { api, absoluteAssetUrl } from "../lib/api";
+import { useBookCover } from "../hooks/useBookCover";
+import { api } from "../lib/api";
 import { formatPercent } from "../lib/format";
 import { useSession } from "../lib/session";
 
@@ -22,6 +23,18 @@ export function HomePage() {
 
   const recentBooks = dashboardQuery.data?.recentBooks ?? [];
   const continueReading = recentBooks.find((book) => book.progress) ?? recentBooks[0];
+  const continueCover = useBookCover(continueReading ?? {
+    id: "",
+    title: "",
+    format: "EPUB",
+    readingState: "QUEUED",
+    uploadedAt: "",
+    fileSize: 0,
+    toc: [],
+    bookmarkCount: 0,
+    annotationCount: 0,
+    progress: null,
+  });
 
   return (
     <div className="page-stack">
@@ -54,10 +67,9 @@ export function HomePage() {
                 className="continue-card__cover"
                 style={
                   continueReading.coverUrl
+                  && continueCover
                     ? {
-                        backgroundImage: `linear-gradient(180deg, rgba(6, 10, 18, 0.06), rgba(6, 10, 18, 0.42)), url(${absoluteAssetUrl(
-                          continueReading.coverUrl,
-                        )})`,
+                        backgroundImage: `linear-gradient(180deg, rgba(6, 10, 18, 0.06), rgba(6, 10, 18, 0.42)), url(${continueCover})`,
                       }
                     : { background: `linear-gradient(135deg, ${continueReading.accentColor ?? "#b2c5ff"}, #f8f1e7)` }
                 }

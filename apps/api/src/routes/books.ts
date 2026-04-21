@@ -16,6 +16,7 @@ import { z } from "zod";
 import { mapBook } from "../lib/mappers.js";
 import {
   detectBookFormat,
+  extractEpubCover,
   extractBookMetadata,
   mergeMetadata,
   parseLooseAuthors,
@@ -267,6 +268,51 @@ export const booksRoutes: FastifyPluginAsync = async (app) => {
       return {
         book: mapBook(updated),
       };
+    },
+  );
+
+  app.get(
+    "/:bookId/cover",
+    {
+      preHandler: app.authenticate,
+    },
+    async (request, reply) => {
+      const { bookId } = bookIdParamsSchema.parse(request.params);
+      const book = await findUserBook(request.user.sub, bookId);
+
+      if (!book) {
+        return reply.code(404).send({
+          message: "Book not found.",
+        });
+      }
+
+      if (book.format !== "EPUB") {
+        return reply.code(404).send({
+          message: "Cover is unavailable for this format.",
+        });
+      }
+
+      const exists = await storagePathExists(book.storagePath);
+      if (!exists) {
+        return reply.code(404).send({
+          message: "Stored file is missing.",
+        });
+      }
+
+      const absolutePath = resolveStoragePath(book.storagePath);
+      const cover = await extractEpubCover(absolutePath);
+
+      if (!cover) {
+        return reply.code(404).send({
+          message: "Cover image not found in EPUB.",
+        });
+      }
+
+      reply.header("Content-Type", cover.mimeType);
+      reply.header("Content-Disposition", `inline; filename*=UTF-8''${encodeURIComponent(cover.fileName)}`);
+      reply.header("Cache-Control", "private, max-age=3600");
+
+      return reply.send(cover.buffer);
     },
   );
 

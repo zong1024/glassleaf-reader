@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 
-import { absoluteAssetUrl } from "../lib/api";
+import { useBookCover } from "../hooks/useBookCover";
 import { formatFormat, formatPercent, formatRelativeDate } from "../lib/format";
 import type { Book } from "../lib/types";
 
@@ -11,7 +11,7 @@ type BookCardProps = {
 };
 
 export function BookCard({ book, onOpen, view = "grid" }: BookCardProps) {
-  const cover = absoluteAssetUrl(book.coverUrl);
+  const cover = useBookCover(book);
   const isList = view === "list";
 
   return (

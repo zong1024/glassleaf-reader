@@ -569,6 +569,28 @@ async function readFileRecord(userId: string, bookId: string) {
   }
 }
 
+async function loadEpubFactory() {
+  const module = await import("epubjs");
+  const candidate =
+    (module as { default?: { default?: unknown } }).default?.default ??
+    (module as { default?: unknown }).default ??
+    (module as { ["module.exports"]?: unknown })["module.exports"] ??
+    module;
+
+  if (typeof candidate !== "function") {
+    throw new Error("EPUB parser failed to initialize.");
+  }
+
+  return candidate as (input: ArrayBuffer | string) => {
+    loaded: {
+      metadata: Promise<Record<string, string>>;
+      navigation: Promise<{ toc?: Array<{ label?: string; subitems?: Array<{ label?: string }> }> }>;
+    };
+    coverUrl?: () => Promise<string | null>;
+    destroy?: () => void;
+  };
+}
+
 async function createBookFromUpload(file: File) {
   const uploadedAt = new Date().toISOString();
   const extension = file.name.split(".").pop()?.toLowerCase() ?? "";
@@ -577,14 +599,21 @@ async function createBookFromUpload(file: File) {
   const bookId = crypto.randomUUID();
 
   if (extension === "epub" || file.type === "application/epub+zip") {
-    const module = await import("epubjs");
-    const createBook = (module as { default?: (input: ArrayBuffer) => any }).default ?? (module as unknown as (input: ArrayBuffer) => any);
+    const createBook = await loadEpubFactory();
     const epub = createBook(buffer);
 
     try {
-      const [metadata, navigation] = await Promise.all([
-        epub.loaded.metadata.catch(() => ({})),
+      const [metadata, navigation, coverUrl] = await Promise.all([
+        epub.loaded.metadata.catch(
+          () =>
+            ({}) as {
+              title?: string;
+              creator?: string;
+              description?: string;
+            },
+        ),
         epub.loaded.navigation.catch(() => ({ toc: [] })),
+        epub.coverUrl?.().catch(() => null) ?? Promise.resolve(null),
       ]);
 
       const toc: string[] = (navigation.toc ?? [])
@@ -607,7 +636,7 @@ async function createBookFromUpload(file: File) {
         language: "en",
         format: "EPUB",
         readingState: "QUEUED",
-        coverUrl: coverDataUrl(title, author, palette.accent),
+        coverUrl: coverUrl || coverDataUrl(title, author, palette.accent),
         accentColor: palette.accent,
         pageCount: null,
         wordCount: null,

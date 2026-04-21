@@ -17,11 +17,18 @@ export function mapUser(user: User) {
 }
 
 export function mapBook(book: Book) {
+  const metadataJson = parseJsonObject(book.metadataJson);
+  const coverUrl =
+    book.format === "EPUB" && typeof metadataJson?.coverHref === "string"
+      ? `/v1/books/${book.id}/cover`
+      : null;
+
   return {
     id: book.id,
     title: book.title,
     subtitle: book.subtitle ?? null,
     description: book.description ?? null,
+    coverUrl,
     authors: parseJsonArray(book.authorsJson),
     format: book.format,
     language: book.language ?? null,
@@ -41,7 +48,7 @@ export function mapBook(book: Book) {
     wordCount: book.wordCount ?? null,
     chapterCount: book.chapterCount ?? null,
     metadataSource: book.metadataSource,
-    metadataJson: parseJsonObject(book.metadataJson),
+    metadataJson,
     createdAt: book.createdAt.toISOString(),
     updatedAt: book.updatedAt.toISOString(),
   };

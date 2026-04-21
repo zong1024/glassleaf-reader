@@ -62,6 +62,7 @@ type RawBook = {
   title: string;
   subtitle: string | null;
   description: string | null;
+  coverUrl?: string | null;
   authors: string[];
   format: "EPUB" | "PDF" | "TXT" | "MD";
   language: string | null;
@@ -141,6 +142,36 @@ function accentFromTitle(title: string) {
   return palette[hash % palette.length];
 }
 
+function coverDataUrl(title: string, author: string, accent: string) {
+  const escapedTitle = escapeXml(title);
+  const escapedAuthor = escapeXml(author || "Unknown author");
+  const svg = `
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 580">
+      <defs>
+        <linearGradient id="cover" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="${accent}" />
+          <stop offset="100%" stop-color="#f5e8d2" />
+        </linearGradient>
+      </defs>
+      <rect width="420" height="580" rx="38" fill="url(#cover)" />
+      <rect x="28" y="28" width="364" height="524" rx="28" fill="rgba(255,255,255,0.14)" />
+      <text x="42" y="92" fill="rgba(19,23,31,0.62)" font-family="Manrope, sans-serif" font-size="18" letter-spacing="5">GLASSLEAF</text>
+      <text x="42" y="180" fill="#1a1a1a" font-family="Newsreader, serif" font-size="42" font-weight="600">${escapedTitle}</text>
+      <text x="42" y="510" fill="rgba(19,23,31,0.78)" font-family="Manrope, sans-serif" font-size="22">${escapedAuthor}</text>
+    </svg>`;
+
+  return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
+}
+
+function escapeXml(value: string) {
+  return value
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&apos;");
+}
+
 function mapProgress(raw?: RawProgress | null): ReadingProgress | null {
   if (!raw) {
     return null;
@@ -189,6 +220,7 @@ function mapBook(
     annotationCount?: number;
   },
 ): Book {
+  const accentColor = accentFromTitle(raw.title);
   const progress = mapProgress(extras?.progress);
   return {
     id: raw.id,
@@ -198,8 +230,8 @@ function mapBook(
     language: raw.language,
     format: raw.format,
     readingState: deriveReadingState(extras?.progress),
-    coverUrl: undefined,
-    accentColor: accentFromTitle(raw.title),
+    coverUrl: raw.coverUrl ?? coverDataUrl(raw.title, raw.authors[0] ?? "Unknown author", accentColor),
+    accentColor,
     pageCount: raw.pageCount,
     wordCount: raw.wordCount,
     estimatedMinutes: estimateMinutes(raw),
