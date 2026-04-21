@@ -111,7 +111,9 @@ export default forwardRef<ReaderSurfaceHandle, EpubSurfaceProps>(function EpubSu
         });
 
         await book.ready;
-        await rendition.display(resolveNavigationTarget(initialLocation, navigationRef.current) || undefined);
+        const initialTarget =
+          resolveNavigationTarget(initialLocation, navigationRef.current) || navigationRef.current[0]?.href || undefined;
+        await rendition.display(initialTarget);
       } catch {
         if (!cancelled) {
           setError("This EPUB could not be opened. We have kept the file, but the reader engine could not parse it.");

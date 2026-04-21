@@ -1911,20 +1911,23 @@ p {
 
 .reader-loading-shell,
 .reader-loading {
-  border-radius: 28px;
-  padding: 1.5rem;
+  border-radius: 10px;
+  padding: 1.25rem;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 0.8rem;
   min-height: 240px;
+  background: #25272c;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #dce2ea;
 }
 
 .reader-scene {
-  min-height: calc(100vh - 2.6rem);
+  min-height: calc(100vh - 3rem);
   display: grid;
   grid-template-rows: auto 1fr auto;
-  gap: 0.75rem;
+  gap: 0.9rem;
 }
 
 .reader-theme--paper {
@@ -1947,20 +1950,20 @@ p {
 
 .reader-topbar,
 .reader-bottombar {
-  border-radius: 24px;
-  padding: 0.85rem 1rem;
-  background: rgba(255, 255, 255, 0.72);
-  backdrop-filter: blur(18px);
-  border: 1px solid rgba(24, 51, 75, 0.08);
+  border-radius: 10px;
+  padding: 0.8rem 1rem;
+  background: #2a2d32;
+  border: 1px solid rgba(255, 255, 255, 0.08);
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
+  color: #e7ebef;
 }
 
 .reader-theme--night .reader-topbar,
 .reader-theme--night .reader-bottombar {
-  background: rgba(15, 18, 24, 0.66);
+  background: #202226;
   border-color: rgba(255, 255, 255, 0.08);
   color: var(--reader-fg);
 }
@@ -1974,11 +1977,12 @@ p {
 }
 
 .reader-topbar__center strong {
-  font-size: 1.05rem;
+  font-size: 1rem;
+  color: #eef2f6;
 }
 
 .reader-topbar__center span {
-  color: var(--text-secondary);
+  color: #9ea5b0;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1995,8 +1999,8 @@ p {
 .reader-stage {
   min-height: 0;
   display: grid;
-  grid-template-columns: 72px minmax(0, 1fr) 72px minmax(280px, 340px);
-  gap: 0.85rem;
+  grid-template-columns: 56px minmax(0, 1fr) 56px minmax(240px, 300px);
+  gap: 1rem;
   align-items: stretch;
 }
 
@@ -2008,16 +2012,16 @@ p {
 .reader-frame {
   min-height: 70vh;
   min-width: 0;
-  border-radius: 32px;
-  background: rgba(255, 255, 255, 0.42);
-  padding: 1rem;
+  border-radius: 12px;
+  background: #3b3d42;
+  padding: 0.7rem;
   box-shadow: var(--shadow-soft);
 }
 
 .reader-surface {
   width: 100%;
   height: 100%;
-  border-radius: 26px;
+  border-radius: 8px;
   overflow: hidden;
   background: var(--reader-bg);
   color: var(--reader-fg);
@@ -2036,8 +2040,10 @@ p {
 
 .reader-drawer {
   min-width: 0;
-  border-radius: 32px;
-  padding: 0.8rem;
+  border-radius: 12px;
+  padding: 0.7rem;
+  background: #25272c;
+  border: 1px solid rgba(255, 255, 255, 0.08);
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
   gap: 0.8rem;
@@ -2050,11 +2056,12 @@ p {
 }
 
 .reader-drawer__tabs button {
-  width: 42px;
-  height: 42px;
+  width: 36px;
+  height: 36px;
   border: 0;
-  border-radius: 14px;
-  background: rgba(255, 255, 255, 0.54);
+  border-radius: 8px;
+  background: #34373d;
+  color: #cfd5dd;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -2070,6 +2077,15 @@ p {
   display: grid;
   align-content: start;
   gap: 1rem;
+  color: #e8ebef;
+}
+
+.reader-drawer__header h3 {
+  color: #f2f5f8;
+}
+
+.reader-drawer__header span {
+  color: #a0a7b1;
 }
 
 .reader-list {
@@ -2079,10 +2095,10 @@ p {
 
 .reader-list__item,
 .reader-list__note {
-  border-radius: 18px;
-  background: rgba(255, 255, 255, 0.62);
-  border: 1px solid rgba(24, 51, 75, 0.08);
-  padding: 0.8rem;
+  border-radius: 8px;
+  background: #31343a;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  padding: 0.7rem;
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   gap: 0.6rem;
@@ -2107,10 +2123,11 @@ p {
 }
 
 .reader-link {
-  border-radius: 16px;
-  padding: 0.8rem 0.9rem;
-  background: rgba(255, 255, 255, 0.58);
-  border: 1px solid rgba(24, 51, 75, 0.08);
+  border-radius: 8px;
+  padding: 0.72rem 0.8rem;
+  background: #31343a;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  color: #e6eaef;
 }
 
 .note-form {
@@ -2121,6 +2138,11 @@ p {
 .note-form textarea {
   min-height: 120px;
   resize: vertical;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: #31343a;
+  color: #edf1f6;
+  padding: 0.8rem;
 }
 
 .settings-stack {
@@ -2137,6 +2159,14 @@ p {
   flex: 1;
   display: grid;
   gap: 0.35rem;
+}
+
+.reader-bottombar__progress strong {
+  color: #eef2f6;
+}
+
+.reader-bottombar__progress span {
+  color: #a0a7b1;
 }
 
 .reader-theme--night .reader-bottombar__progress span,
@@ -2169,9 +2199,12 @@ p {
 }
 
 .tap-zone {
-  width: 56px;
-  height: 96px;
-  border-radius: 26px;
+  width: 32px;
+  height: 64px;
+  border-radius: 999px;
+  background: rgba(224, 226, 230, 0.78);
+  color: #7d838d;
+  border: 0;
 }
 
 .splash-screen {

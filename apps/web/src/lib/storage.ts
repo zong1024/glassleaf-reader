@@ -27,7 +27,7 @@ export function clearStoredTokens() {
 
 export function getReaderPreferences(): ReaderPreferences {
   const fallback: ReaderPreferences = {
-    theme: "paper",
+    theme: "night",
     fontScale: 1,
     lineHeight: 1.7,
   };

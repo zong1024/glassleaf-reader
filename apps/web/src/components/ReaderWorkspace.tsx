@@ -120,12 +120,12 @@ export function ReaderWorkspace({
 
   const activeThemeLabel = useMemo(() => {
     if (preferences.theme === "night") {
-      return "Night";
+      return "夜间";
     }
     if (preferences.theme === "sepia") {
-      return "Sepia";
+      return "护眼";
     }
-    return "Paper";
+    return "纸张";
   }, [preferences.theme]);
 
   function toggleDrawer(next: Exclude<DrawerKey, null>) {
@@ -136,9 +136,9 @@ export function ReaderWorkspace({
     <div className="reader-drawer__content">
       {drawer === "contents" ? (
         <>
-          <div className="reader-drawer__header">
-            <h3>Contents</h3>
-            <span>{book.toc.length} sections</span>
+            <div className="reader-drawer__header">
+            <h3>目录</h3>
+            <span>{book.toc.length} 节</span>
           </div>
           <div className="detail-list detail-list--reader">
             {book.toc.length ? (
@@ -157,7 +157,7 @@ export function ReaderWorkspace({
                 </button>
               ))
             ) : (
-              <p className="empty-copy">This format does not expose a structured table of contents yet.</p>
+              <p className="empty-copy">这个格式暂时没有可用目录。</p>
             )}
           </div>
         </>
@@ -166,7 +166,7 @@ export function ReaderWorkspace({
       {drawer === "bookmarks" ? (
         <>
           <div className="reader-drawer__header">
-            <h3>Bookmarks</h3>
+            <h3>书签</h3>
             <span>{bookmarks.length}</span>
           </div>
           <button
@@ -184,7 +184,7 @@ export function ReaderWorkspace({
             type="button"
           >
             <Plus size={16} />
-            Save current place
+            保存当前位置
           </button>
           <div className="reader-list">
             {bookmarks.length ? (
@@ -204,7 +204,7 @@ export function ReaderWorkspace({
                 </article>
               ))
             ) : (
-              <p className="empty-copy">Tap save whenever you want to pin an exact reading position.</p>
+              <p className="empty-copy">读到哪里就存到哪里，方便下次直接回来。</p>
             )}
           </div>
         </>
@@ -213,7 +213,7 @@ export function ReaderWorkspace({
       {drawer === "notes" ? (
         <>
           <div className="reader-drawer__header">
-            <h3>Notes</h3>
+            <h3>笔记</h3>
             <span>{annotations.length}</span>
           </div>
           <form
@@ -233,12 +233,12 @@ export function ReaderWorkspace({
           >
             <textarea
               onChange={(event) => setNoteDraft(event.target.value)}
-              placeholder="Capture a thought at the current reading position"
+              placeholder="记录你在当前段落的想法"
               value={noteDraft}
             />
             <button className="secondary-button" type="submit">
               <NotebookPen size={16} />
-              Add note
+              添加笔记
             </button>
           </form>
           <div className="reader-list">
@@ -250,8 +250,8 @@ export function ReaderWorkspace({
                     onClick={() => readerRef.current?.goTo(annotation.location)}
                     type="button"
                   >
-                    <strong>{annotation.quote || annotation.note || "Annotation"}</strong>
-                    <span>{annotation.note || "Jump back to this passage"}</span>
+                    <strong>{annotation.quote || annotation.note || "笔记"}</strong>
+                    <span>{annotation.note || "回到这个位置"}</span>
                   </button>
                   <button className="icon-button" onClick={() => onRemoveAnnotation(annotation.id)} type="button">
                     <Trash2 size={14} />
@@ -259,7 +259,7 @@ export function ReaderWorkspace({
                 </article>
               ))
             ) : (
-              <p className="empty-copy">Use notes for content memory. They travel with your account and jump back precisely.</p>
+              <p className="empty-copy">笔记会和账号一起同步，也能精确跳回对应位置。</p>
             )}
           </div>
         </>
@@ -268,15 +268,15 @@ export function ReaderWorkspace({
       {drawer === "settings" ? (
         <>
           <div className="reader-drawer__header">
-            <h3>Appearance</h3>
+            <h3>外观</h3>
             <span>{activeThemeLabel}</span>
           </div>
           <div className="settings-stack">
             <div className="segment-group">
               {([
-                { key: "paper", label: "Paper" },
-                { key: "sepia", label: "Sepia" },
-                { key: "night", label: "Night" },
+                { key: "paper", label: "纸张" },
+                { key: "sepia", label: "护眼" },
+                { key: "night", label: "夜间" },
               ] as const).map((theme) => (
                 <button
                   className={preferences.theme === theme.key ? "is-active" : ""}
@@ -289,7 +289,7 @@ export function ReaderWorkspace({
               ))}
             </div>
             <label className="slider-field">
-              <span>Font scale</span>
+              <span>字号</span>
               <input
                 max="1.4"
                 min="0.85"
@@ -300,7 +300,7 @@ export function ReaderWorkspace({
               />
             </label>
             <label className="slider-field">
-              <span>Line height</span>
+              <span>行高</span>
               <input
                 max="2.1"
                 min="1.4"
@@ -321,11 +321,11 @@ export function ReaderWorkspace({
       <header className={`reader-topbar ${chromeVisible ? "is-visible" : ""}`}>
         <button className="ghost-button" onClick={onBack} type="button">
           <ArrowLeft size={16} />
-          Back
+          返回
         </button>
         <div className="reader-topbar__center">
           <strong>{book.title}</strong>
-          <span>{currentLocation.chapter || "Immersive reading"}</span>
+          <span>{currentLocation.chapter || "沉浸阅读"}</span>
         </div>
         <div className="reader-topbar__actions">
           <button className="icon-button" onClick={() => toggleDrawer("bookmarks")} type="button">
@@ -402,7 +402,7 @@ export function ReaderWorkspace({
 
       <footer className={`reader-bottombar ${chromeVisible ? "is-visible" : ""}`}>
         <div className="reader-bottombar__progress">
-          <span>Progress</span>
+          <span>进度</span>
           <strong>{formatPercent(currentLocation.percent)}</strong>
           <input
             max="100"
@@ -415,13 +415,13 @@ export function ReaderWorkspace({
         </div>
         <div className="reader-bottombar__actions">
           <button className="secondary-button" onClick={() => toggleDrawer("contents")} type="button">
-            Table of contents
+            目录
           </button>
           <button className="secondary-button" onClick={() => toggleDrawer("notes")} type="button">
-            Notes
+            笔记
           </button>
           <button className="secondary-button" onClick={() => toggleDrawer("settings")} type="button">
-            Appearance
+            外观
           </button>
         </div>
       </footer>
