@@ -4,7 +4,7 @@ import { useMediaQuery } from "../../hooks/useMediaQuery";
 import type { ReaderLocation, ReaderPreferences, ReaderSurfaceHandle } from "../../lib/types";
 
 type EpubSurfaceProps = {
-  fileUrl: string;
+  fileSource: string | ArrayBuffer;
   initialLocation?: string | null;
   onLocationChange: (location: ReaderLocation) => void;
   preferences: ReaderPreferences;
@@ -16,7 +16,7 @@ type TocEntry = {
 };
 
 export default forwardRef<ReaderSurfaceHandle, EpubSurfaceProps>(function EpubSurface(
-  { fileUrl, initialLocation, onLocationChange, preferences },
+  { fileSource, initialLocation, onLocationChange, preferences },
   ref,
 ) {
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -63,7 +63,7 @@ export default forwardRef<ReaderSurfaceHandle, EpubSurfaceProps>(function EpubSu
       try {
         setError(null);
         const createBook = await loadEpubFactory();
-        const book = createBook(fileUrl);
+        const book = createBook(fileSource);
         const rendition = book.renderTo(container, {
           width: "100%",
           height: "100%",
@@ -114,9 +114,11 @@ export default forwardRef<ReaderSurfaceHandle, EpubSurfaceProps>(function EpubSu
         const initialTarget =
           resolveNavigationTarget(initialLocation, navigationRef.current) || navigationRef.current[0]?.href || undefined;
         await rendition.display(initialTarget);
-      } catch {
+      } catch (error) {
         if (!cancelled) {
-          setError("This EPUB could not be opened. We have kept the file, but the reader engine could not parse it.");
+          const detail = error instanceof Error ? error.message : "Unknown EPUB renderer error.";
+          console.error("EPUB open failed", error);
+          setError(`This EPUB could not be opened. ${detail}`);
         }
         return;
       }
@@ -139,7 +141,7 @@ export default forwardRef<ReaderSurfaceHandle, EpubSurfaceProps>(function EpubSu
       navigationRef.current = [];
       selectionRef.current = undefined;
     };
-  }, [fileUrl, initialLocation, isCompact, onLocationChange, preferences]);
+  }, [fileSource, initialLocation, isCompact, onLocationChange, preferences]);
 
   if (error) {
     return <div className="reader-loading glass-panel">{error}</div>;
@@ -160,7 +162,7 @@ async function loadEpubFactory() {
     throw new Error("EPUB renderer failed to initialize.");
   }
 
-  return candidate as (input: string) => {
+  return candidate as (input: string | ArrayBuffer) => {
     renderTo: (element: HTMLElement, options: Record<string, unknown>) => any;
     loaded: { navigation: Promise<{ toc?: Array<{ label?: string; href?: string; subitems?: Array<any> }> }> };
     ready: Promise<unknown>;

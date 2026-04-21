@@ -13,6 +13,7 @@ export function ReaderPage() {
   const { token } = useSession();
   const queryClient = useQueryClient();
   const [fileUrl, setFileUrl] = useState("");
+  const [fileBuffer, setFileBuffer] = useState<ArrayBuffer | null>(null);
 
   const stateQuery = useQuery({
     queryKey: ["bookState", bookId],
@@ -23,17 +24,24 @@ export function ReaderPage() {
   useEffect(() => {
     let active = true;
     let objectUrl = "";
+    setFileBuffer(null);
 
     api.books
       .downloadFile(bookId, token)
-      .then((blob) => {
+      .then(async (blob) => {
         objectUrl = URL.createObjectURL(blob);
+        const nextBuffer =
+          stateQuery.data?.book?.format === "EPUB" || blob.type === "application/epub+zip"
+            ? await blob.arrayBuffer()
+            : null;
         if (active) {
           setFileUrl(objectUrl);
+          setFileBuffer(nextBuffer);
         }
       })
       .catch(() => {
         setFileUrl("");
+        setFileBuffer(null);
       });
 
     return () => {
@@ -42,7 +50,7 @@ export function ReaderPage() {
         URL.revokeObjectURL(objectUrl);
       }
     };
-  }, [bookId, token]);
+  }, [bookId, stateQuery.data?.book?.format, token]);
 
   const addBookmark = useMutation({
     mutationFn: (payload: {
@@ -98,7 +106,7 @@ export function ReaderPage() {
   const bookmarks = stateQuery.data?.bookmarks ?? [];
   const progress = stateQuery.data?.progress;
 
-  if (!book || !fileUrl) {
+  if (!book || !fileUrl || (book.format === "EPUB" && !fileBuffer)) {
     return (
       <div className="reader-loading-shell glass-panel">
         <LoaderCircle className="is-spinning" size={20} />
@@ -112,6 +120,7 @@ export function ReaderPage() {
       annotations={annotations}
       bookmarks={bookmarks}
       book={book}
+      fileBuffer={fileBuffer}
       fileUrl={fileUrl}
       initialLocation={progress?.location ?? book.progress?.location}
       onAddAnnotation={(payload) => addAnnotation.mutate(payload)}

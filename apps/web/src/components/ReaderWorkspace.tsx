@@ -32,6 +32,7 @@ const TextSurface = lazy(() => import("./readers/TextSurface"));
 type ReaderWorkspaceProps = {
   book: Book;
   fileUrl: string;
+  fileBuffer?: ArrayBuffer | null;
   initialLocation?: string | null;
   bookmarks: Bookmark[];
   annotations: Annotation[];
@@ -69,6 +70,7 @@ type DrawerKey = "contents" | "bookmarks" | "notes" | "settings" | null;
 export function ReaderWorkspace({
   book,
   fileUrl,
+  fileBuffer,
   initialLocation,
   bookmarks,
   annotations,
@@ -136,7 +138,7 @@ export function ReaderWorkspace({
     <div className="reader-drawer__content">
       {drawer === "contents" ? (
         <>
-            <div className="reader-drawer__header">
+          <div className="reader-drawer__header">
             <h3>目录</h3>
             <span>{book.toc.length} 节</span>
           </div>
@@ -348,7 +350,7 @@ export function ReaderWorkspace({
           <Suspense fallback={<div className="reader-loading glass-panel">Preparing the book for reading...</div>}>
             {book.format === "EPUB" ? (
               <EpubSurface
-                fileUrl={fileUrl}
+                fileSource={fileBuffer ?? fileUrl}
                 initialLocation={initialLocation}
                 onLocationChange={setCurrentLocation}
                 preferences={preferences}
