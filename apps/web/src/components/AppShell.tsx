@@ -1,8 +1,7 @@
-import { Sparkles, Library, Upload, UserRound, House, LogOut } from "lucide-react";
+import { Library, LogOut, Menu, Search, Upload, UserRound } from "lucide-react";
 import { NavLink, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 
 import { useMediaQuery } from "../hooks/useMediaQuery";
-import { displayName } from "../lib/storage";
 import { useSession } from "../lib/session";
 import { HomePage } from "../pages/HomePage";
 import { LibraryPage } from "../pages/LibraryPage";
@@ -10,110 +9,99 @@ import { ProfilePage } from "../pages/ProfilePage";
 import { ReaderPage } from "../pages/ReaderPage";
 import { UploadPage } from "../pages/UploadPage";
 
-const navItems = [
-  { to: "/", label: "首页", icon: House },
-  { to: "/library", label: "书库", icon: Library },
-  { to: "/upload", label: "上传", icon: Upload },
-  { to: "/profile", label: "我的", icon: UserRound },
+const primaryNav = [
+  { to: "/", label: "Glassleaf Home" },
+  { to: "/library", label: "我的书架", icon: Library },
 ];
 
-function pageTitle(pathname: string) {
-  if (pathname.startsWith("/reader")) {
-    return "正在阅读";
+function mobileTitle(pathname: string) {
+  if (pathname.startsWith("/library")) {
+    return "我的书架";
   }
 
-  const item = navItems.find((entry) => entry.to === pathname);
-  return item?.label ?? "Glassleaf";
+  if (pathname.startsWith("/upload")) {
+    return "上传图书";
+  }
+
+  if (pathname.startsWith("/profile")) {
+    return "账号";
+  }
+
+  if (pathname.startsWith("/reader")) {
+    return "阅读中";
+  }
+
+  return "Glassleaf Home";
 }
 
 export function AppShell() {
   const { pathname } = useLocation();
   const navigate = useNavigate();
-  const { user, signOut } = useSession();
-  const isMobile = useMediaQuery("(max-width: 920px)");
+  const { signOut } = useSession();
+  const isMobile = useMediaQuery("(max-width: 860px)");
 
   return (
-    <div className="catalog-shell">
-      <header className="catalog-header">
-        <button className="catalog-brand" onClick={() => navigate("/")} type="button">
-          <span className="catalog-brand__mark">
-            <Sparkles size={16} />
-          </span>
-          <span className="catalog-brand__text">
-            <strong>Glassleaf</strong>
-            <span>多格式电子书书库</span>
-          </span>
-        </button>
-
-        {!isMobile ? (
-          <nav className="catalog-nav" aria-label="Primary navigation">
-            {navItems.map(({ to, label, icon: Icon }) => (
-              <NavLink
-                key={to}
-                className={({ isActive }) => `catalog-nav__link ${isActive ? "is-active" : ""}`}
-                to={to}
-              >
-                <Icon size={16} />
-                <span>{label}</span>
-              </NavLink>
-            ))}
-          </nav>
-        ) : (
-          <div className="catalog-header__mobile-title">
-            <span>{pageTitle(pathname)}</span>
-          </div>
-        )}
-
-        <div className="catalog-header__actions">
+    <div className="portal-shell">
+      <header className="portal-topbar">
+        <div className="portal-topbar__left">
           {!isMobile ? (
-            <button className="catalog-action catalog-action--primary" onClick={() => navigate("/upload")} type="button">
-              <Upload size={16} />
-              <span>上传图书</span>
+            primaryNav.map((item, index) => (
+              <NavLink
+                key={item.to}
+                className={({ isActive }) =>
+                  `portal-topbar__pill ${index === 0 ? "portal-topbar__pill--blue" : "portal-topbar__pill--green"} ${
+                    isActive ? "is-active" : ""
+                  }`
+                }
+                to={item.to}
+              >
+                {item.icon ? <item.icon size={14} /> : null}
+                <span>{item.label}</span>
+              </NavLink>
+            ))
+          ) : (
+            <button className="portal-topbar__mobile-title" onClick={() => navigate("/")} type="button">
+              {mobileTitle(pathname)}
+            </button>
+          )}
+        </div>
+
+        <div className="portal-topbar__right">
+          {!isMobile ? (
+            <button className="portal-topbar__text" onClick={() => navigate("/upload")} type="button">
+              上传
             </button>
           ) : null}
-          <button className="catalog-user" onClick={() => navigate("/profile")} type="button">
-            <span className="catalog-user__avatar">{displayName(user).slice(0, 2).toUpperCase()}</span>
-            {!isMobile ? (
-              <span className="catalog-user__meta">
-                <strong>{displayName(user)}</strong>
-                <span>{user.email}</span>
-              </span>
-            ) : null}
+          <button className="portal-topbar__icon" onClick={() => navigate("/library")} type="button">
+            <Search size={16} />
+          </button>
+          <button className="portal-topbar__icon" onClick={() => navigate("/upload")} type="button">
+            <Upload size={16} />
+          </button>
+          <button className="portal-topbar__icon" onClick={() => navigate("/profile")} type="button">
+            <UserRound size={16} />
           </button>
           {!isMobile ? (
-            <button className="catalog-action" onClick={signOut} type="button">
+            <button className="portal-topbar__icon" onClick={signOut} type="button">
               <LogOut size={16} />
             </button>
-          ) : null}
+          ) : (
+            <button className="portal-topbar__icon" onClick={() => navigate("/library")} type="button">
+              <Menu size={16} />
+            </button>
+          )}
         </div>
       </header>
 
-      <div className="catalog-shell__body">
-        <main className="catalog-page-frame">
-          <Routes>
-            <Route path="/" element={<HomePage />} />
-            <Route path="/library" element={<LibraryPage />} />
-            <Route path="/upload" element={<UploadPage />} />
-            <Route path="/profile" element={<ProfilePage />} />
-            <Route path="/reader/:bookId" element={<ReaderPage />} />
-          </Routes>
-        </main>
-
-        {isMobile ? (
-          <nav className="catalog-bottom-nav" aria-label="Bottom navigation">
-            {navItems.map(({ to, label, icon: Icon }) => (
-              <NavLink
-                key={to}
-                className={({ isActive }) => `catalog-bottom-nav__link ${isActive ? "is-active" : ""}`}
-                to={to}
-              >
-                <Icon size={18} />
-                <span>{label}</span>
-              </NavLink>
-            ))}
-          </nav>
-        ) : null}
-      </div>
+      <main className="portal-shell__body">
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/library" element={<LibraryPage />} />
+          <Route path="/upload" element={<UploadPage />} />
+          <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/reader/:bookId" element={<ReaderPage />} />
+        </Routes>
+      </main>
     </div>
   );
 }

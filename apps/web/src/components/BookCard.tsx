@@ -1,66 +1,66 @@
 import { motion } from "framer-motion";
-import { ArrowUpRight } from "lucide-react";
 
 import { useBookCover } from "../hooks/useBookCover";
-import { formatFormat, formatPercent, formatRelativeDate } from "../lib/format";
+import { formatFormat } from "../lib/format";
 import type { Book } from "../lib/types";
 
 type BookCardProps = {
   book: Book;
   onOpen: (bookId: string) => void;
-  view?: "grid" | "list";
+  variant?: "portal" | "detail";
 };
 
-export function BookCard({ book, onOpen, view = "grid" }: BookCardProps) {
+export function BookCard({ book, onOpen, variant = "detail" }: BookCardProps) {
   const cover = useBookCover(book);
-  const isList = view === "list";
-  const progressWidth = `${Math.max(4, Math.round((book.progress?.percent ?? 0) * 100))}%`;
-  const readingStateLabel =
-    book.readingState === "QUEUED" ? "待读" : book.readingState === "READING" ? "阅读中" : "已完成";
+
+  if (variant === "portal") {
+    return (
+      <motion.button
+        className="portal-book-card"
+        onClick={() => onOpen(book.id)}
+        transition={{ type: "spring", stiffness: 240, damping: 22 }}
+        whileHover={{ y: -3 }}
+        type="button"
+      >
+        <div
+          className="portal-book-card__cover"
+          style={
+            cover
+              ? { backgroundImage: `url(${cover})` }
+              : { background: `linear-gradient(145deg, ${book.accentColor ?? "#3f80b0"}, #1d3040)` }
+          }
+        >
+          <span className="portal-book-card__format">{formatFormat(book.format)}</span>
+        </div>
+        <div className="portal-book-card__meta">
+          <strong>{book.title}</strong>
+          <span>{book.author || "作者未知"}</span>
+        </div>
+      </motion.button>
+    );
+  }
 
   return (
     <motion.button
-      className={`catalog-book-card catalog-book-card--${view}`}
+      className="library-book-card"
       onClick={() => onOpen(book.id)}
-      whileHover={{ y: -5 }}
-      transition={{ type: "spring", stiffness: 250, damping: 26 }}
+      transition={{ type: "spring", stiffness: 240, damping: 22 }}
+      whileHover={{ y: -3 }}
       type="button"
     >
       <div
-        className="catalog-book-card__cover"
+        className="library-book-card__cover"
         style={
           cover
-            ? { backgroundImage: `linear-gradient(180deg, rgba(8, 16, 29, 0.02), rgba(8, 16, 29, 0.3)), url(${cover})` }
-            : { background: `linear-gradient(145deg, ${book.accentColor ?? "#4d8ccf"}, #0f2e47)` }
+            ? { backgroundImage: `url(${cover})` }
+            : { background: `linear-gradient(145deg, ${book.accentColor ?? "#3f80b0"}, #1d3040)` }
         }
-      >
-        <span className="catalog-book-card__format">{formatFormat(book.format)}</span>
-        <span className="catalog-book-card__open">
-          <ArrowUpRight size={15} />
-        </span>
+      />
+      <div className="library-book-card__body">
+        <strong>{book.title}</strong>
+        <span>{book.author || "作者未知"}</span>
+        <p>{formatFormat(book.format)}</p>
       </div>
-        <div className="catalog-book-card__body">
-          <div className="catalog-book-card__meta">
-            <span className="catalog-book-card__eyebrow">{readingStateLabel}</span>
-            <span>{formatRelativeDate(book.openedAt ?? book.uploadedAt)}</span>
-          </div>
-          <div className="catalog-book-card__title-group">
-            <h3>{book.title}</h3>
-            <p>{book.author || "作者未知"}</p>
-          </div>
-          <div className="catalog-book-card__footer">
-            <div className="catalog-book-card__progress">
-              <span>已读 {formatPercent(book.progress?.percent)}</span>
-              <div className="catalog-book-card__progress-track">
-                <div className="catalog-book-card__progress-fill" style={{ width: progressWidth }} />
-              </div>
-            </div>
-            <div className={`catalog-book-card__stats ${isList ? "catalog-book-card__stats--spread" : ""}`}>
-              <span>{book.bookmarkCount} 个书签</span>
-              <span>{book.annotationCount} 条笔记</span>
-            </div>
-          </div>
-        </div>
     </motion.button>
   );
 }

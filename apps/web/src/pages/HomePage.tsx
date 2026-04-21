@@ -1,260 +1,128 @@
 import { startTransition, useDeferredValue, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { BookText, Clock3, Layers3, NotebookPen, Search, ShieldCheck, Zap } from "lucide-react";
+import { BookOpenText, Search } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 import { BookCard } from "../components/BookCard";
-import { SectionTitle } from "../components/SectionTitle";
-import { useBookCover } from "../hooks/useBookCover";
 import { api } from "../lib/api";
-import { formatPercent } from "../lib/format";
 import { useSession } from "../lib/session";
+
+const subjectLinks = ["文学小说", "计算机", "历史传记", "心理学", "商业经济", "设计艺术"];
 
 export function HomePage() {
   const { token } = useSession();
   const navigate = useNavigate();
   const [query, setQuery] = useState("");
+  const [searchMode, setSearchMode] = useState<"general" | "fulltext">("general");
   const deferredQuery = useDeferredValue(query);
-  const dashboardQuery = useQuery({
-    queryKey: ["dashboard"],
-    queryFn: () => api.books.dashboard(token),
-  });
   const booksQuery = useQuery({
     queryKey: ["books"],
     queryFn: () => api.books.list(token),
   });
 
-  const recentBooks = dashboardQuery.data?.recentBooks ?? [];
   const books = booksQuery.data?.books ?? [];
-  const continueReading = recentBooks.find((book) => book.progress) ?? recentBooks[0];
-  const shelfPreview = useMemo(() => {
-    if (deferredQuery) {
-      return books.filter((book) =>
-        `${book.title} ${book.author ?? ""}`.toLowerCase().includes(deferredQuery.toLowerCase()),
-      );
-    }
+  const featuredBooks = useMemo(() => {
+    const source = deferredQuery
+      ? books.filter((book) =>
+          `${book.title} ${book.author ?? ""}`.toLowerCase().includes(deferredQuery.toLowerCase()),
+        )
+      : books;
 
-    return recentBooks.length ? recentBooks : books;
-  }, [books, deferredQuery, recentBooks]);
-  const featuredBooks = shelfPreview.slice(0, 10);
-  const subjectLinks = ["文学小说", "计算机", "历史传记", "心理学", "商业经济", "设计艺术"];
-  const formatStats = [
-    { label: "EPUB", value: books.filter((book) => book.format === "EPUB").length },
-    { label: "PDF", value: books.filter((book) => book.format === "PDF").length },
-    { label: "TXT", value: books.filter((book) => book.format === "TXT").length },
-    { label: "MD", value: books.filter((book) => book.format === "MD").length },
-  ];
-  const continueCover = useBookCover(
-    continueReading ?? {
-      id: "",
-      title: "",
-      format: "EPUB",
-      readingState: "QUEUED",
-      uploadedAt: "",
-      fileSize: 0,
-      toc: [],
-      bookmarkCount: 0,
-      annotationCount: 0,
-      progress: null,
-    },
-  );
+    return source.slice(0, 15);
+  }, [books, deferredQuery]);
 
   return (
-    <div className="catalog-page">
-      <section className="catalog-hero">
-        <div className="catalog-hero__copy">
-          <span className="section-title__eyebrow">个人电子书入口</span>
-          <h1>像图书索引一样搜索你的整座书库。</h1>
-          <p>
-            首页不再是单纯的阅读器面板，而是更像大型电子书站点的检索首页。上传、检索、继续阅读，都集中在这一块高密度入口里。
-          </p>
-          <form
-            className="catalog-search-panel"
-            onSubmit={(event) => {
-              event.preventDefault();
-              navigate(`/library?query=${encodeURIComponent(query.trim())}`);
-            }}
-          >
-            <label className="catalog-search-field">
-              <Search size={18} />
+    <div className="portal-home">
+      <section className="portal-home__hero">
+        <div className="portal-logo" aria-label="Glassleaf">
+          <span className="portal-logo__accent">Glass</span>
+          <span className="portal-logo__main">leaf</span>
+        </div>
+        <p className="portal-home__tagline">您通往知识与文化的入口，个人私有书库专用。</p>
+        <div className="portal-home__notice">只搜索你自己的账号书库，不连接外部公开站点。</div>
+
+        <form
+          className="portal-searchbox"
+          onSubmit={(event) => {
+            event.preventDefault();
+            navigate(`/library?query=${encodeURIComponent(query.trim())}`);
+          }}
+        >
+          <div className="portal-searchbox__tabs" role="tablist" aria-label="Search mode">
+            <button
+              className={searchMode === "general" ? "is-active" : ""}
+              onClick={() => setSearchMode("general")}
+              type="button"
+            >
+              通用搜索
+            </button>
+            <button
+              className={searchMode === "fulltext" ? "is-active" : ""}
+              onClick={() => setSearchMode("fulltext")}
+              type="button"
+            >
+              全文搜索
+            </button>
+          </div>
+
+          <div className="portal-searchbox__row">
+            <label className="portal-searchbox__field">
+              <Search size={16} />
               <input
                 onChange={(event) => {
                   const nextValue = event.target.value;
                   startTransition(() => setQuery(nextValue));
                 }}
-                placeholder="搜索书名、作者或关键词"
+                placeholder={
+                  searchMode === "general"
+                    ? "书名、作者、ISBN、出版社、关键词"
+                    : "搜索书籍正文中的内容"
+                }
                 value={query}
               />
             </label>
-            <div className="catalog-search-panel__actions">
-              <button className="catalog-action catalog-action--primary" type="submit">
-                搜索图书
-              </button>
-              <button className="catalog-action" onClick={() => navigate("/upload")} type="button">
-                上传文件
-              </button>
-            </div>
-          </form>
-          <div className="catalog-subject-links">
-            {subjectLinks.map((subject) => (
-              <button
-                className="catalog-subject-links__item"
-                key={subject}
-                onClick={() => navigate(`/library?query=${encodeURIComponent(subject)}`)}
-                type="button"
-              >
-                {subject}
-              </button>
-            ))}
+            <button className="portal-searchbox__submit" type="submit">
+              搜索
+            </button>
           </div>
+
+          <button className="portal-searchbox__meta" onClick={() => navigate("/library")} type="button">
+            搜索设置
+          </button>
+        </form>
+
+        <div className="portal-quick-tags">
+          {subjectLinks.map((subject) => (
+            <button
+              className="portal-quick-tags__item"
+              key={subject}
+              onClick={() => navigate(`/library?query=${encodeURIComponent(subject)}`)}
+              type="button"
+            >
+              {subject}
+            </button>
+          ))}
+        </div>
+      </section>
+
+      <section className="portal-shelf">
+        <div className="portal-shelf__head">
+          <h2>{deferredQuery ? "搜索结果" : "最受欢迎"}</h2>
+          <span>{deferredQuery ? `匹配“${deferredQuery}”` : "在你的私有书架中"}</span>
         </div>
 
-        <aside className="catalog-hero__aside">
-          <div className="catalog-highlight-card">
-            <div className="catalog-highlight-card__head">
-              <span>继续阅读</span>
-              <ShieldCheck size={16} />
-            </div>
-            {continueReading ? (
-              <>
-                <div
-                  className="catalog-highlight-card__cover"
-                  style={
-                    continueReading.coverUrl && continueCover
-                      ? {
-                          backgroundImage: `linear-gradient(180deg, rgba(6, 10, 18, 0.06), rgba(6, 10, 18, 0.42)), url(${continueCover})`,
-                        }
-                      : { background: `linear-gradient(135deg, ${continueReading.accentColor ?? "#3c7fc5"}, #0b2740)` }
-                  }
-                />
-                <div className="catalog-highlight-card__body">
-                  <strong>{continueReading.title}</strong>
-                  <p>{continueReading.author || "作者未知"}</p>
-                  <div className="catalog-highlight-card__progress">
-                    <strong>{formatPercent(continueReading.progress?.percent)}</strong>
-                    <span>{continueReading.progress?.chapter || "从上次离开的地方继续"}</span>
-                  </div>
-                  <button
-                    className="catalog-action catalog-action--primary"
-                    onClick={() => navigate(`/reader/${continueReading.id}`)}
-                    type="button"
-                  >
-                    打开阅读器
-                  </button>
-                </div>
-              </>
-            ) : (
-              <div className="empty-panel">
-                <p>上传第一本书之后，这里会显示你下一本要读的内容。</p>
-              </div>
-            )}
-          </div>
-          <div className="catalog-format-strip">
-            {formatStats.map((item) => (
-              <div className="catalog-format-strip__item" key={item.label}>
-                <span>{item.label}</span>
-                <strong>{item.value}</strong>
-              </div>
-            ))}
-          </div>
-        </aside>
-      </section>
-
-      <section className="catalog-stat-row">
-        <article className="catalog-stat">
-          <Clock3 size={18} />
-          <div>
-            <strong>{dashboardQuery.data?.stats.readingCount ?? 0}</strong>
-            <p>正在阅读</p>
-          </div>
-        </article>
-        <article className="catalog-stat">
-          <Layers3 size={18} />
-          <div>
-            <strong>{dashboardQuery.data?.stats.queuedCount ?? 0}</strong>
-            <p>书架待读</p>
-          </div>
-        </article>
-        <article className="catalog-stat">
-          <NotebookPen size={18} />
-          <div>
-            <strong>{books.reduce((sum, book) => sum + book.bookmarkCount, 0)}</strong>
-            <p>累计书签</p>
-          </div>
-        </article>
-        <article className="catalog-stat">
-          <Zap size={18} />
-          <div>
-            <strong>{dashboardQuery.data?.stats.finishedCount ?? 0}</strong>
-            <p>已读完成</p>
-          </div>
-        </article>
-      </section>
-
-      <section className="page-section">
-        <SectionTitle
-          eyebrow="推荐书架"
-          title={deferredQuery ? "搜索预览" : "最近加入"}
-          description={
-            deferredQuery
-              ? "你输入时结果会立即收窄，让首页本身就具备真实可用的检索反馈。"
-              : "更接近大型电子书目录站的高密度书格布局，但数据完全属于你自己的账号。"
-          }
-        />
         {featuredBooks.length ? (
-          <div className="catalog-book-grid">
+          <div className="portal-book-grid">
             {featuredBooks.map((book) => (
-              <BookCard key={book.id} book={book} onOpen={(id) => navigate(`/reader/${id}`)} />
+              <BookCard key={book.id} book={book} onOpen={(id) => navigate(`/reader/${id}`)} variant="portal" />
             ))}
           </div>
         ) : (
-          <div className="empty-panel empty-panel--wide">
-            <BookText size={24} />
-            <p>书库还是空的。上传 EPUB、PDF、TXT 或 Markdown 后，这里就会自动填满。</p>
+          <div className="portal-empty">
+            <BookOpenText size={20} />
+            <p>还没有可展示的图书。先上传一本 EPUB、PDF、TXT 或 Markdown。</p>
           </div>
         )}
-      </section>
-
-      <section className="catalog-two-column">
-        <div className="page-section">
-          <SectionTitle
-            eyebrow="分类入口"
-            title="像资料库一样浏览"
-            description="快捷入口保留大型书站那种直接、高密度、偏检索导向的使用感觉。"
-          />
-          <div className="catalog-link-panel">
-            {subjectLinks.map((subject) => (
-              <button
-                className="catalog-link-panel__item"
-                key={subject}
-                onClick={() => navigate(`/library?query=${encodeURIComponent(subject)}`)}
-                type="button"
-              >
-                <span>{subject}</span>
-                <span>进入搜索</span>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div className="page-section">
-          <SectionTitle
-            eyebrow="书架动态"
-            title="最近活跃"
-            description="右侧维持操作信息密度，随时看到最近打开、阅读进度和账号侧同步状态。"
-          />
-          <div className="catalog-mini-feed">
-            {books.slice(0, 6).map((book) => (
-              <button className="catalog-mini-feed__item" key={book.id} onClick={() => navigate(`/reader/${book.id}`)} type="button">
-                <div>
-                  <strong>{book.title}</strong>
-                  <p>{book.author || "作者未知"}</p>
-                </div>
-                <span>{formatPercent(book.progress?.percent)}</span>
-              </button>
-            ))}
-          </div>
-        </div>
       </section>
     </div>
   );
