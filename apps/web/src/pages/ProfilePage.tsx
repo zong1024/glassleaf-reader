@@ -1,8 +1,7 @@
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Cloud, BookMarked, NotebookTabs, Sparkles } from "lucide-react";
+import { BookMarked, Cloud, NotebookTabs, Sparkles } from "lucide-react";
 
-import { SectionTitle } from "../components/SectionTitle";
 import { formatRelativeDate } from "../lib/format";
 import { displayName } from "../lib/storage";
 import { api } from "../lib/api";
@@ -26,69 +25,66 @@ export function ProfilePage() {
   }, [booksQuery.data?.books]);
 
   return (
-    <div className="page-stack">
-      <section className="profile-hero glass-panel">
-        <div className="profile-hero__identity">
-          <div className="profile-hero__avatar">{displayName(user).slice(0, 2).toUpperCase()}</div>
+    <div className="portal-profile">
+      <section className="portal-panel portal-profile__hero">
+        <div className="portal-profile__identity">
+          <div className="portal-profile__avatar">{displayName(user).slice(0, 2).toUpperCase()}</div>
           <div>
-            <span className="section-title__eyebrow">Account</span>
-            <h2>{displayName(user)}</h2>
+            <span className="portal-panel__eyebrow">账号</span>
+            <h1>{displayName(user)}</h1>
             <p>{user.email}</p>
           </div>
         </div>
-        <div className="profile-hero__status">
-          <div>
-            <strong>Synced library</strong>
-            <p>Last active {formatRelativeDate(metrics.lastSync)}</p>
-          </div>
+
+        <div className="portal-profile__sync">
           <Cloud size={18} />
+          <div>
+            <strong>书库已同步</strong>
+            <span>最近活跃 {formatRelativeDate(metrics.lastSync)}</span>
+          </div>
         </div>
       </section>
 
-      <section className="stats-grid">
-        <article className="glass-panel stat-card">
+      <section className="portal-profile__stats">
+        <article className="portal-panel portal-profile-stat">
           <Sparkles size={18} />
           <div>
             <strong>{metrics.total}</strong>
-            <p>Total books</p>
+            <span>总图书数</span>
           </div>
         </article>
-        <article className="glass-panel stat-card">
+        <article className="portal-panel portal-profile-stat">
           <BookMarked size={18} />
           <div>
             <strong>{metrics.bookmarks}</strong>
-            <p>Bookmarks saved</p>
+            <span>累计书签</span>
           </div>
         </article>
-        <article className="glass-panel stat-card">
+        <article className="portal-panel portal-profile-stat">
           <NotebookTabs size={18} />
           <div>
             <strong>{metrics.notes}</strong>
-            <p>Annotations written</p>
+            <span>累计笔记</span>
           </div>
         </article>
       </section>
 
-      <section className="page-section">
-        <SectionTitle
-          eyebrow="Preferences"
-          title="Reading defaults"
-          description="Reader appearance is saved locally for now, which keeps mobile and desktop interactions snappy."
-        />
-        <div className="detail-grid">
-          <article className="glass-panel detail-card">
-            <strong>Visual style</strong>
-            <p>Paper, sepia, and night themes inside the reader workspace.</p>
-          </article>
-          <article className="glass-panel detail-card">
-            <strong>Sync model</strong>
-            <p>Progress, bookmarks, notes, and recently opened titles travel with your account.</p>
-          </article>
-          <article className="glass-panel detail-card">
-            <strong>Touch behavior</strong>
-            <p>All gesture actions also have explicit controls, so the reader remains dependable on every device.</p>
-          </article>
-        </div>
+      <section className="portal-profile__details">
+        <article className="portal-panel portal-profile-card">
+          <span className="portal-panel__eyebrow">阅读主题</span>
+          <strong>Paper / Sepia / Night</strong>
+          <p>阅读器里的配色仍然保留本地保存，切换速度快，也更稳定。</p>
+        </article>
+        <article className="portal-panel portal-profile-card">
+          <span className="portal-panel__eyebrow">同步内容</span>
+          <strong>进度、书签、批注</strong>
+          <p>只要使用当前账号登录，阅读状态就会随着书库一起同步。</p>
+        </article>
+        <article className="portal-panel portal-profile-card">
+          <span className="portal-panel__eyebrow">触屏交互</span>
+          <strong>触摸与显式控件并存</strong>
+          <p>手机端优先保证稳定可操作，不把关键动作只交给手势。</p>
+        </article>
       </section>
     </div>
   );

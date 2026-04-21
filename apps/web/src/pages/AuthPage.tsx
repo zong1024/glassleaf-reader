@@ -1,6 +1,5 @@
 import { useState, type FormEvent } from "react";
-import { motion } from "framer-motion";
-import { LoaderCircle, Sparkles, Smartphone, MonitorSmartphone, BookOpenText } from "lucide-react";
+import { LoaderCircle } from "lucide-react";
 
 import { api } from "../lib/api";
 import type { User } from "../lib/types";
@@ -30,99 +29,47 @@ export function AuthPage({ onAuthenticated, loading }: AuthPageProps) {
           : await api.auth.register({ email, password, name });
       onAuthenticated(payload);
     } catch (submitError) {
-      setError(submitError instanceof Error ? submitError.message : "Authentication failed");
+      setError(submitError instanceof Error ? submitError.message : "认证失败");
     } finally {
       setIsSubmitting(false);
     }
   }
 
   return (
-    <div className="auth-screen">
-      <section className="auth-hero">
-        <motion.div
-          className="auth-hero__poster"
-          initial={{ opacity: 0, y: 18 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, ease: "easeOut" }}
-        >
-          <div className="brand-lockup brand-lockup--hero">
-            <div className="brand-mark">
-              <Sparkles size={20} />
-            </div>
-            <div>
-              <strong>Glassleaf</strong>
-              <p>Apple Books inspired fluid web reader</p>
-            </div>
-          </div>
+    <div className="portal-auth">
+      <div className="portal-auth__intro">
+        <div className="portal-logo" aria-label="Glassleaf">
+          <span className="portal-logo__accent">Glass</span>
+          <span className="portal-logo__main">leaf</span>
+        </div>
+        <p>登录你的私有电子书书库，继续检索、上传和阅读。</p>
+      </div>
 
-          <div className="auth-copy">
-            <span className="section-title__eyebrow">EPUB / PDF / TXT / MD</span>
-            <h1>Build your private reading room with fast parsing and calm motion.</h1>
-            <p>
-              Upload your library, resume instantly across devices, and keep bookmarks, notes, and reading
-              progress synchronized inside one elegant React workspace.
-            </p>
-          </div>
-
-          <div className="auth-feature-grid">
-            <article className="glass-panel auth-feature-card">
-              <BookOpenText size={18} />
-              <div>
-                <strong>Reader-first UI</strong>
-                <p>Large-title hierarchy, sheet-based controls, tap zones, and typography-led layouts.</p>
-              </div>
-            </article>
-            <article className="glass-panel auth-feature-card">
-              <Smartphone size={18} />
-              <div>
-                <strong>Touch native</strong>
-                <p>Thumb-friendly controls, safe-area aware navigation, and gesture-compatible reading chrome.</p>
-              </div>
-            </article>
-            <article className="glass-panel auth-feature-card">
-              <MonitorSmartphone size={18} />
-              <div>
-                <strong>Cross-device flow</strong>
-                <p>Continue reading, organize your shelf, and manage bookmarks from mobile or desktop.</p>
-              </div>
-            </article>
-          </div>
-        </motion.div>
-      </section>
-
-      <section className="auth-panel glass-panel">
-        <div className="auth-panel__toggle">
-          <button
-            className={mode === "login" ? "is-active" : ""}
-            onClick={() => setMode("login")}
-            type="button"
-          >
-            Sign in
+      <section className="portal-auth__panel">
+        <div className="portal-searchbox__tabs portal-auth__tabs" role="tablist" aria-label="Auth mode">
+          <button className={mode === "login" ? "is-active" : ""} onClick={() => setMode("login")} type="button">
+            登录
           </button>
-          <button
-            className={mode === "register" ? "is-active" : ""}
-            onClick={() => setMode("register")}
-            type="button"
-          >
-            Create account
+          <button className={mode === "register" ? "is-active" : ""} onClick={() => setMode("register")} type="button">
+            注册
           </button>
         </div>
 
-        <form className="auth-form" onSubmit={handleSubmit}>
-          <div>
-            <span className="auth-form__eyebrow">{mode === "login" ? "Welcome back" : "New library setup"}</span>
-            <h2>{mode === "login" ? "Continue where you left off." : "Start your personal book cloud."}</h2>
+        <form className="portal-auth__form" onSubmit={handleSubmit}>
+          <div className="portal-auth__header">
+            <span className="portal-panel__eyebrow">{mode === "login" ? "欢迎回来" : "创建账号"}</span>
+            <h1>{mode === "login" ? "继续进入你的书库" : "创建一个新的私人书库"}</h1>
           </div>
 
           {mode === "register" ? (
-            <label>
-              <span>Name</span>
-              <input onChange={(event) => setName(event.target.value)} placeholder="Glassleaf reader" value={name} />
+            <label className="portal-auth__field">
+              <span>昵称</span>
+              <input onChange={(event) => setName(event.target.value)} placeholder="Glassleaf Reader" value={name} />
             </label>
           ) : null}
 
-          <label>
-            <span>Email</span>
+          <label className="portal-auth__field">
+            <span>邮箱</span>
             <input
               autoComplete="email"
               onChange={(event) => setEmail(event.target.value)}
@@ -132,12 +79,12 @@ export function AuthPage({ onAuthenticated, loading }: AuthPageProps) {
             />
           </label>
 
-          <label>
-            <span>Password</span>
+          <label className="portal-auth__field">
+            <span>密码</span>
             <input
               autoComplete={mode === "login" ? "current-password" : "new-password"}
               onChange={(event) => setPassword(event.target.value)}
-              placeholder="At least 8 characters"
+              placeholder="至少 8 位"
               type="password"
               value={password}
             />
@@ -145,12 +92,12 @@ export function AuthPage({ onAuthenticated, loading }: AuthPageProps) {
 
           {error ? <p className="inline-error">{error}</p> : null}
 
-          <button className="primary-button" disabled={isSubmitting || loading} type="submit">
+          <button className="portal-searchbox__submit portal-auth__submit" disabled={isSubmitting || loading} type="submit">
             {isSubmitting || loading ? <LoaderCircle className="is-spinning" size={16} /> : null}
-            <span>{mode === "login" ? "Enter Glassleaf" : "Create my account"}</span>
+            <span>{mode === "login" ? "进入书库" : "创建账号"}</span>
           </button>
 
-          <p className="auth-form__helper">Run the seed script to create the demo account declared in the API environment.</p>
+          <p className="portal-auth__helper">首次体验也可以直接注册，本地和在线后端都支持这套流程。</p>
         </form>
       </section>
     </div>

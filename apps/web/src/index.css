@@ -603,6 +603,325 @@ p {
   padding: 0 0.65rem;
 }
 
+.portal-panel {
+  background: #26282d;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  padding: 1rem;
+}
+
+.portal-panel__eyebrow {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #7fa9c7;
+}
+
+.portal-upload,
+.portal-profile {
+  display: grid;
+  gap: 1.4rem;
+}
+
+.portal-upload__hero,
+.portal-profile__hero {
+  width: min(100%, 680px);
+  margin: 0 auto;
+}
+
+.portal-upload__hero h1,
+.portal-profile__hero h1 {
+  margin: 0 0 0.35rem;
+  font-size: 1.45rem;
+  color: #f0f3f7;
+}
+
+.portal-upload__hero p,
+.portal-profile__hero p {
+  color: var(--text-secondary);
+}
+
+.portal-upload__layout {
+  width: min(100%, 680px);
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(240px, 0.8fr);
+  gap: 1rem;
+}
+
+.portal-upload-dropzone {
+  border: 1px dashed rgba(112, 185, 235, 0.26);
+  background: #25272c;
+  border-radius: 6px;
+  min-height: 320px;
+  padding: 1.3rem;
+  text-align: left;
+  display: grid;
+  align-content: start;
+  gap: 1rem;
+}
+
+.portal-upload-dropzone.is-dragging {
+  border-color: rgba(112, 185, 235, 0.52);
+  background: #292c31;
+}
+
+.portal-upload-dropzone__icon {
+  width: 46px;
+  height: 46px;
+  border-radius: 999px;
+  background: #30333a;
+  color: #7fc2ef;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.portal-upload-dropzone__copy {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.portal-upload-dropzone__copy strong {
+  font-size: 1.05rem;
+  color: #f1f4f8;
+}
+
+.portal-upload-dropzone__copy p,
+.portal-upload-side p,
+.portal-upload-side__list,
+.portal-upload-list__item p,
+.portal-profile__sync span,
+.portal-profile-card p,
+.portal-auth__helper,
+.portal-auth__intro p {
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+.portal-upload-dropzone__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.portal-upload-dropzone__meta span {
+  padding: 0.35rem 0.6rem;
+  border-radius: 999px;
+  background: #30333a;
+  color: #cfd5dd;
+  font-size: 0.72rem;
+}
+
+.portal-upload-dropzone__progress {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.portal-upload-dropzone__track {
+  width: 100%;
+  height: 7px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: #33363c;
+}
+
+.portal-upload-dropzone__fill {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #5bb0e8, #8bc86f);
+}
+
+.portal-upload-side {
+  display: grid;
+  align-content: start;
+  gap: 0.8rem;
+}
+
+.portal-upload-side h2,
+.portal-profile-card strong,
+.portal-auth__header h1 {
+  margin: 0;
+  color: #f0f3f7;
+}
+
+.portal-upload-side__list {
+  margin: 0;
+  padding-left: 1.1rem;
+}
+
+.portal-upload-list {
+  display: grid;
+  gap: 0.7rem;
+}
+
+.portal-upload-list__item {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: #26282d;
+  border-radius: 6px;
+  padding: 0.95rem 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.portal-upload-list__item strong,
+.portal-profile__sync strong,
+.portal-profile-card strong {
+  color: #eef2f6;
+}
+
+.portal-upload-list__meta {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.55rem;
+  color: #c2c8d0;
+  font-size: 0.78rem;
+}
+
+.portal-profile__hero {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.portal-profile__identity {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+}
+
+.portal-profile__avatar {
+  width: 54px;
+  height: 54px;
+  border-radius: 10px;
+  background: linear-gradient(145deg, #5bb0e8, #3c82b4);
+  color: #0d1318;
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.portal-profile__sync {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: #d6dde5;
+}
+
+.portal-profile__stats,
+.portal-profile__details {
+  width: min(100%, 680px);
+  margin: 0 auto;
+  display: grid;
+  gap: 0.8rem;
+}
+
+.portal-profile__stats {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.portal-profile-stat {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.portal-profile-stat strong {
+  display: block;
+  font-size: 1.35rem;
+  color: #eef2f6;
+}
+
+.portal-profile-stat span {
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+}
+
+.portal-profile-card {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.portal-auth {
+  min-height: calc(100vh - 42px);
+  display: grid;
+  place-items: center;
+  gap: 1.4rem;
+  padding: 2rem 1rem 3rem;
+}
+
+.portal-auth__intro {
+  display: grid;
+  justify-items: center;
+  gap: 0.5rem;
+  text-align: center;
+}
+
+.portal-auth__panel {
+  width: min(100%, 440px);
+  display: grid;
+  gap: 0.9rem;
+}
+
+.portal-auth__tabs {
+  justify-content: center;
+}
+
+.portal-auth__form {
+  background: #26282d;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  padding: 1.15rem;
+  display: grid;
+  gap: 0.9rem;
+}
+
+.portal-auth__header {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.portal-auth__field {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.portal-auth__field span {
+  color: #d8dde4;
+  font-size: 0.82rem;
+}
+
+.portal-auth__field input {
+  min-height: 42px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: #2d2f34;
+  border-radius: 4px;
+  color: #eef2f6;
+  padding: 0 0.8rem;
+  outline: none;
+}
+
+.portal-auth__field input:focus {
+  border-color: rgba(112, 185, 235, 0.42);
+}
+
+.portal-auth__submit {
+  min-height: 42px;
+  border: 1px solid #60636a;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+}
+
 .auth-screen {
   min-height: 100vh;
   display: grid;
@@ -1933,6 +2252,21 @@ p {
 }
 
 @media (max-width: 920px) {
+  .portal-upload__layout,
+  .portal-profile__stats {
+    grid-template-columns: 1fr;
+  }
+
+  .portal-profile__hero,
+  .portal-upload-list__item {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .portal-upload-list__meta {
+    justify-content: flex-start;
+  }
+
   .portal-shell__body {
     padding-top: 1.25rem;
   }
@@ -2028,6 +2362,11 @@ p {
 }
 
 @media (max-width: 640px) {
+  .portal-auth {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+  }
+
   .portal-shell__body {
     padding-left: 0.75rem;
     padding-right: 0.75rem;
