@@ -6,7 +6,7 @@ type SectionTitleProps = {
 
 export function SectionTitle({ eyebrow, title, description }: SectionTitleProps) {
   return (
-    <div className="section-title">
+    <div className="catalog-section-title">
       {eyebrow ? <span className="section-title__eyebrow">{eyebrow}</span> : null}
       <div>
         <h2>{title}</h2>

@@ -1,7 +1,7 @@
-import { startTransition, useDeferredValue, useMemo, useState } from "react";
+import { startTransition, useDeferredValue, useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Grid2x2, List, Search, SlidersHorizontal } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 
 import { BookCard } from "../components/BookCard";
 import { SectionTitle } from "../components/SectionTitle";
@@ -15,11 +15,16 @@ type SortMode = "recent" | "title" | "author";
 export function LibraryPage() {
   const { token } = useSession();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [view, setView] = useState<ViewMode>("grid");
-  const [query, setQuery] = useState("");
+  const [query, setQuery] = useState(() => searchParams.get("query") ?? "");
   const [filter, setFilter] = useState<ReadingState | "ALL">("ALL");
   const [sort, setSort] = useState<SortMode>("recent");
   const deferredQuery = useDeferredValue(query);
+
+  useEffect(() => {
+    setQuery(searchParams.get("query") ?? "");
+  }, [searchParams]);
 
   const booksQuery = useQuery({
     queryKey: ["books"],
@@ -49,68 +54,123 @@ export function LibraryPage() {
     });
   }, [booksQuery.data?.books, deferredQuery, filter, sort]);
 
+  const formatCounts = useMemo(() => {
+    const source = booksQuery.data?.books ?? [];
+    return [
+      { label: "EPUB", value: source.filter((book) => book.format === "EPUB").length },
+      { label: "PDF", value: source.filter((book) => book.format === "PDF").length },
+      { label: "TXT", value: source.filter((book) => book.format === "TXT").length },
+      { label: "MD", value: source.filter((book) => book.format === "MD").length },
+    ];
+  }, [booksQuery.data?.books]);
+
   return (
-    <div className="page-stack">
-      <section className="page-section page-section--dense">
+    <div className="catalog-page">
+      <section className="catalog-library-hero">
         <SectionTitle
-          eyebrow="Full shelf control"
-          title="Library"
-          description="Search, sort, and reopen titles without breaking the calm flow of the reading surface."
+          eyebrow="可检索目录"
+          title="书库总览"
+          description="结果页改成更像大型电子书目录站的检索版式，但数据来源仍然是你自己的上传书架。"
         />
 
-        <div className="library-toolbar glass-panel">
-          <label className="search-field">
-            <Search size={16} />
-            <input
-              onChange={(event) => {
-                const nextValue = event.target.value;
-                startTransition(() => setQuery(nextValue));
-              }}
-              placeholder="Search by title or author"
-              value={query}
-            />
-          </label>
+        <div className="catalog-library-toolbar">
+          <form
+            className="catalog-search-panel"
+            onSubmit={(event) => {
+              event.preventDefault();
+              const next = new URLSearchParams(searchParams);
+              if (query.trim()) {
+                next.set("query", query.trim());
+              } else {
+                next.delete("query");
+              }
+              setSearchParams(next);
+            }}
+          >
+            <label className="catalog-search-field">
+              <Search size={18} />
+              <input
+                onChange={(event) => {
+                  const nextValue = event.target.value;
+                  startTransition(() => setQuery(nextValue));
+                }}
+                placeholder="搜索书名、作者或关键词"
+                value={query}
+              />
+            </label>
+            <div className="catalog-search-panel__actions">
+              <button className="catalog-action catalog-action--primary" type="submit">
+                搜索
+              </button>
+              <button className="catalog-action" onClick={() => navigate("/upload")} type="button">
+                上传
+              </button>
+            </div>
+          </form>
 
-          <div className="segment-group" role="tablist" aria-label="Reading filter">
+          <div className="catalog-filter-row" role="tablist" aria-label="Reading filter">
             {(["ALL", "QUEUED", "READING", "FINISHED"] as const).map((value) => (
               <button
                 key={value}
-                className={filter === value ? "is-active" : ""}
+                className={`catalog-filter-chip ${filter === value ? "is-active" : ""}`}
                 onClick={() => setFilter(value)}
                 type="button"
               >
-                {value.toLowerCase()}
+                {value === "ALL"
+                  ? "全部"
+                  : value === "QUEUED"
+                    ? "待读"
+                    : value === "READING"
+                      ? "阅读中"
+                      : "已完成"}
               </button>
             ))}
           </div>
 
-          <div className="toolbar-actions">
-            <label className="select-field">
-              <SlidersHorizontal size={15} />
-              <select onChange={(event) => setSort(event.target.value as SortMode)} value={sort}>
-                <option value="recent">Most recent</option>
-                <option value="title">Title</option>
-                <option value="author">Author</option>
-              </select>
-            </label>
-            <div className="toggle-group">
-              <button className={view === "grid" ? "is-active" : ""} onClick={() => setView("grid")} type="button">
-                <Grid2x2 size={16} />
-              </button>
-              <button className={view === "list" ? "is-active" : ""} onClick={() => setView("list")} type="button">
-                <List size={16} />
-              </button>
+          <div className="catalog-library-toolbar__bottom">
+            <div className="catalog-format-strip">
+              {formatCounts.map((item) => (
+                <div className="catalog-format-strip__item" key={item.label}>
+                  <span>{item.label}</span>
+                  <strong>{item.value}</strong>
+                </div>
+              ))}
+            </div>
+            <div className="catalog-library-toolbar__controls">
+              <label className="select-field">
+                <SlidersHorizontal size={15} />
+                <select onChange={(event) => setSort(event.target.value as SortMode)} value={sort}>
+                  <option value="recent">最近打开</option>
+                  <option value="title">书名</option>
+                  <option value="author">作者</option>
+                </select>
+              </label>
+              <div className="toggle-group">
+                <button className={view === "grid" ? "is-active" : ""} onClick={() => setView("grid")} type="button">
+                  <Grid2x2 size={16} />
+                </button>
+                <button className={view === "list" ? "is-active" : ""} onClick={() => setView("list")} type="button">
+                  <List size={16} />
+                </button>
+              </div>
             </div>
           </div>
         </div>
       </section>
 
-      <section className={`book-grid ${view === "list" ? "book-grid--list" : ""}`}>
+      <section className="catalog-results-header">
+        <strong>{books.length} 条结果</strong>
+        <span>
+          {deferredQuery ? `匹配 “${deferredQuery}”` : "当前显示你的完整上传书架"}
+        </span>
+      </section>
+
+      <section className={`catalog-book-grid ${view === "list" ? "catalog-book-grid--list" : ""}`}>
         {books.length ? (
           books.map((book) => <BookCard key={book.id} book={book} onOpen={(id) => navigate(`/reader/${id}`)} view={view} />)
         ) : (
           <div className="empty-panel empty-panel--wide">
-            <p>No titles match the current search. Try changing the state filter or upload a new file.</p>
+            <p>没有符合当前条件的图书。可以换个关键词、切换状态筛选，或重新上传新文件。</p>
           </div>
         )}
       </section>

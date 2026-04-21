@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { ArrowUpRight } from "lucide-react";
 
 import { useBookCover } from "../hooks/useBookCover";
 import { formatFormat, formatPercent, formatRelativeDate } from "../lib/format";
@@ -13,47 +14,53 @@ type BookCardProps = {
 export function BookCard({ book, onOpen, view = "grid" }: BookCardProps) {
   const cover = useBookCover(book);
   const isList = view === "list";
+  const progressWidth = `${Math.max(4, Math.round((book.progress?.percent ?? 0) * 100))}%`;
+  const readingStateLabel =
+    book.readingState === "QUEUED" ? "待读" : book.readingState === "READING" ? "阅读中" : "已完成";
 
   return (
     <motion.button
-      className={`book-card book-card--${view}`}
+      className={`catalog-book-card catalog-book-card--${view}`}
       onClick={() => onOpen(book.id)}
-      whileHover={{ y: -4 }}
-      transition={{ type: "spring", stiffness: 220, damping: 22 }}
+      whileHover={{ y: -5 }}
+      transition={{ type: "spring", stiffness: 250, damping: 26 }}
       type="button"
     >
       <div
-        className="book-card__cover"
+        className="catalog-book-card__cover"
         style={
           cover
-            ? { backgroundImage: `linear-gradient(180deg, rgba(10, 12, 18, 0.08), rgba(10, 12, 18, 0.38)), url(${cover})` }
-            : { background: `linear-gradient(135deg, ${book.accentColor ?? "#8ca4ff"}, #f4ece1)` }
+            ? { backgroundImage: `linear-gradient(180deg, rgba(8, 16, 29, 0.02), rgba(8, 16, 29, 0.3)), url(${cover})` }
+            : { background: `linear-gradient(145deg, ${book.accentColor ?? "#4d8ccf"}, #0f2e47)` }
         }
       >
-        {!cover ? <span className="book-card__format">{formatFormat(book.format)}</span> : null}
+        <span className="catalog-book-card__format">{formatFormat(book.format)}</span>
+        <span className="catalog-book-card__open">
+          <ArrowUpRight size={15} />
+        </span>
       </div>
-      <div className="book-card__body">
-        <div className="book-card__meta">
-          <span className="book-card__eyebrow">{book.readingState.toLowerCase()}</span>
-          <span>{formatRelativeDate(book.openedAt ?? book.uploadedAt)}</span>
-        </div>
-        <div className="book-card__title-group">
-          <h3>{book.title}</h3>
-          <p>{book.author || "Unknown author"}</p>
-        </div>
-        <div className="book-card__footer">
-          <div className="progress-pill">
-            <span>{formatPercent(book.progress?.percent)}</span>
-            <div className="progress-pill__track">
-              <div className="progress-pill__fill" style={{ width: formatPercent(book.progress?.percent) }} />
+        <div className="catalog-book-card__body">
+          <div className="catalog-book-card__meta">
+            <span className="catalog-book-card__eyebrow">{readingStateLabel}</span>
+            <span>{formatRelativeDate(book.openedAt ?? book.uploadedAt)}</span>
+          </div>
+          <div className="catalog-book-card__title-group">
+            <h3>{book.title}</h3>
+            <p>{book.author || "作者未知"}</p>
+          </div>
+          <div className="catalog-book-card__footer">
+            <div className="catalog-book-card__progress">
+              <span>已读 {formatPercent(book.progress?.percent)}</span>
+              <div className="catalog-book-card__progress-track">
+                <div className="catalog-book-card__progress-fill" style={{ width: progressWidth }} />
+              </div>
+            </div>
+            <div className={`catalog-book-card__stats ${isList ? "catalog-book-card__stats--spread" : ""}`}>
+              <span>{book.bookmarkCount} 个书签</span>
+              <span>{book.annotationCount} 条笔记</span>
             </div>
           </div>
-          <div className={`book-card__stats ${isList ? "book-card__stats--spread" : ""}`}>
-            <span>{book.bookmarkCount} bookmarks</span>
-            <span>{book.annotationCount} notes</span>
-          </div>
         </div>
-      </div>
     </motion.button>
   );
 }

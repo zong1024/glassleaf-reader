@@ -26,12 +26,12 @@ export function UploadPage() {
       setMessage("");
     },
     onSuccess: (payload) => {
-      setMessage(`Imported ${payload.book.title}`);
+      setMessage(`已导入《${payload.book.title}》`);
       queryClient.invalidateQueries({ queryKey: ["books"] });
       queryClient.invalidateQueries({ queryKey: ["dashboard"] });
     },
     onError: (error) => {
-      setMessage(error instanceof Error ? error.message : "Upload failed");
+      setMessage(error instanceof Error ? error.message : "上传失败");
     },
   });
 
@@ -63,19 +63,19 @@ export function UploadPage() {
             {uploadMutation.isPending ? <LoaderCircle className="is-spinning" size={20} /> : <FileUp size={20} />}
           </div>
           <div>
-            <h2>Drop a book to ingest it at reading speed.</h2>
-            <p>EPUB is optimized first, with PDF, TXT, and Markdown supported in the same library pipeline.</p>
+            <h2>把电子书拖进来，立刻入库。</h2>
+            <p>优先优化 EPUB，同时支持 PDF、TXT 和 Markdown，统一进入同一套书架与阅读流程。</p>
           </div>
           <div className="upload-dropzone__meta">
-            <span>Fast metadata extraction</span>
-            <span>Touch-friendly mobile import</span>
-            <span>Bookmarks and notes ready</span>
+            <span>快速提取元数据</span>
+            <span>移动端触控友好</span>
+            <span>书签与笔记就绪</span>
           </div>
           <div className="upload-progress">
             <div className="upload-progress__bar">
               <div className="upload-progress__fill" style={{ width: `${Math.round(progress * 100)}%` }} />
             </div>
-            <span>{message || (uploadMutation.isPending ? `Uploading ${Math.round(progress * 100)}%` : "Choose or drag a file")}</span>
+            <span>{message || (uploadMutation.isPending ? `正在上传 ${Math.round(progress * 100)}%` : "选择文件或直接拖拽到这里")}</span>
           </div>
         </button>
 
@@ -88,24 +88,22 @@ export function UploadPage() {
         />
 
         <aside className="upload-side glass-panel">
-          <span className="section-title__eyebrow">Pipeline notes</span>
-          <h3>What happens on upload</h3>
+          <span className="section-title__eyebrow">处理流程</span>
+          <h3>上传后会发生什么</h3>
           <ol className="detail-list">
-            <li>The file lands in your private storage and format is detected immediately.</li>
-            <li>EPUB metadata, cover art, and table of contents are extracted for faster first open.</li>
-            <li>Library rows, progress sync, bookmarks, and notes are wired to your account automatically.</li>
+            <li>文件先进入你的私有空间，系统立即识别格式并创建书籍记录。</li>
+            <li>EPUB 会优先提取元数据、封面和目录，保证第一次打开更快。</li>
+            <li>书架、进度、书签和批注会自动挂到当前账号下。</li>
           </ol>
-          <p className="upload-side__footnote">
-            Add one book at a time for the cleanest mobile experience, or drag from desktop for a faster batch-like flow.
-          </p>
+          <p className="upload-side__footnote">手机端建议一次上传一本，桌面端可以直接拖拽，流程会更顺手。</p>
         </aside>
       </section>
 
       <section className="page-section">
         <div className="section-title section-title--compact">
           <div>
-            <span className="section-title__eyebrow">Recently added</span>
-            <h2>Fresh imports</h2>
+            <span className="section-title__eyebrow">最近加入</span>
+            <h2>新导入图书</h2>
           </div>
           <Sparkles size={16} />
         </div>
@@ -115,7 +113,7 @@ export function UploadPage() {
               <div>
                 <strong>{book.title}</strong>
                 <p>
-                  {(book.author || "Unknown author")} · {book.format.toLowerCase()}
+                  {(book.author || "作者未知")} · {book.format.toLowerCase()}
                 </p>
               </div>
               <div className="import-row__meta">
